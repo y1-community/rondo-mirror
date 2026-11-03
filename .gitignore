@@ -1,0 +1,34 @@
+# secrets
+*.env
+.env*
+cookies*.txt
+*.jks
+*.keystore
+keystore.properties
+local.properties
+
+# node
+node_modules/
+server/dist/
+
+# android
+app/build/
+app/.gradle/
+.gradle/
+build/
+.idea/
+*.iml
+.DS_Store
+
+# kept on the maintainer's machine only: working notes, deploy files, AI session setup
+private/
+CLAUDE.md
+.claude/
+
+# update page
+web-updater/node_modules/
+web-updater/dist/
+
+# firmware builds (large downloads and images)
+firmware/work/
+firmware/out/

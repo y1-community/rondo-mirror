@@ -1,0 +1,64 @@
+# Rondo's server on a VPS (docs/server.md): the server plus Caddy, which gets a Let's Encrypt
+# certificate for your domain and serves HTTPS in the older form Android 4.2 can still speak.
+# Put your domain in infra/.env first:
+#
+#   echo "RONDO_DOMAIN=music.example.com" > infra/.env
+#   docker compose -f infra/compose.vps.yaml up -d
+#
+# Ports 80 and 443 must be free. If the machine already runs a web server, use compose.home.yaml
+# behind it instead and copy the tls block from infra/Caddyfile. To build the server from this
+# checkout instead of downloading it, add -f infra/compose.build.yaml.
+name: rondo
+
+services:
+  rondo:
+    image: ghcr.io/jarvissax/rondo-server:latest
+    container_name: rondo
+    restart: unless-stopped
+    environment:
+      - PUBLIC_BASE=https://${RONDO_DOMAIN:?put RONDO_DOMAIN=your.domain in infra/.env}
+      - COOKIES_FILE=/data/secrets/cookies.txt
+      - YTDLP_BIN=/data/bin/yt-dlp
+      - PORT=3000
+    volumes:
+      - rondo-data:/data        # yt-dlp, cookies.txt, config.json (admin password and device token hashes)
+      - rondo-updater:/run/updater:ro   # the token the updater shares with the server
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:3000/healthz"]
+      interval: 15m
+      timeout: 20s
+      retries: 3
+
+  # Update on the admin page: downloads the newest server image and restarts the server on it,
+  # keeping its settings. It needs Docker's socket, and only touches the container named in TARGET.
+  updater:
+    image: ghcr.io/jarvissax/rondo-updater:latest
+    container_name: rondo-updater
+    restart: unless-stopped
+    environment:
+      - TARGET=rondo
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+      - rondo-updater:/run/updater
+
+  caddy:
+    image: caddy:2
+    container_name: rondo-caddy
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      - RONDO_DOMAIN=${RONDO_DOMAIN}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data        # the certificate
+      - caddy-config:/config
+    depends_on:
+      - rondo
+
+volumes:
+  rondo-data:
+  rondo-updater:
+  caddy-data:
+  caddy-config:
