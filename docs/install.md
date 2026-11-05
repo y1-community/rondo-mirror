@@ -35,7 +35,7 @@ After that, updates take a minute and keep everything (see [Updating](#updating-
 The same thing, with the file downloaded by hand:
 
 1. Download **`rom.zip`** from Rondo's [latest release](https://github.com/jarvissax/rondo/releases/latest).
-2. In Innioasis Updater CE, choose **Install from a file…**, and pick the
+2. In Innioasis Updater CE, open **Settings**, choose **Install from a file…**, and pick the
    `rom.zip` you downloaded.
 3. Press **Install / Restore** and follow steps 4 and 5 above.
 
