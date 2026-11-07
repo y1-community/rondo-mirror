@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "generated_at": "2026-11-06T11:34:05Z",
+  "generated_at": "2026-11-07T19:43:05Z",
   "source_repo": "jarvissax/rondo",
   "mirror_repo": "y1-community/rondo-mirror",
   "title_prefix": "Portable Flashing Package: ",
@@ -59,7 +59,7 @@
           "model": "Y1",
           "type": "Type A",
           "size": 844849919,
-          "sha256": "fe16c2e79a07311a62bbba109bce5c5ddb8fa6c2bf8bba41357d012dd5c64b5f",
+          "sha256": "24498413945503ce00c96d467a86326a29e19ed94ffa0799f1cda68bc0f1d944",
           "url": "https://github.com/y1-community/rondo-mirror/releases/download/v1.0.2/rom-linux.zip"
         },
         {
@@ -69,7 +69,7 @@
           "model": "Y1",
           "type": "Type A",
           "size": 703534968,
-          "sha256": "5b3e467910ac9d7a20c8354035d1edd44d0ffcf319aa4bacb0152fd2b56dc5f4",
+          "sha256": "5f59a15d47f3f547e043d38f7a0d108e61d0e2d3e8695c96b969d93bad1e9560",
           "url": "https://github.com/y1-community/rondo-mirror/releases/download/v1.0.2/rom-macos.zip"
         },
         {
@@ -78,8 +78,8 @@
           "platform": "windows",
           "model": "Y1",
           "type": "Type A",
-          "size": 729006847,
-          "sha256": "5d2558726fb9a0da8ee4c170593d1c69e6682700d29924bf533c2dd65fd06bc7",
+          "size": 705658766,
+          "sha256": "d163f3c61bd5c9abfea20748b12c3e92c64adbdbdbe58b8b4a0c91c348952a27",
           "url": "https://github.com/y1-community/rondo-mirror/releases/download/v1.0.2/rom-windows.zip"
         }
       ],
@@ -106,7 +106,7 @@
           "model": "Y1",
           "type": "Type A",
           "size": 844850257,
-          "sha256": "049866ba69988912c0807dc6c819ed2a48c84671b407be7c99eb03077a8353f1",
+          "sha256": "d2644a8f0f6d85d12e53213cb06bda25fc874814ff7e1b6ea86ec730d7e12519",
           "url": "https://github.com/y1-community/rondo-mirror/releases/download/v1.0.1/rom-linux.zip"
         },
         {
@@ -116,7 +116,7 @@
           "model": "Y1",
           "type": "Type A",
           "size": 703535307,
-          "sha256": "b19d62eb6a06a0ca4531a7fb23233671a43deca19ec75fb51515b959e70cdbac",
+          "sha256": "99292a12b3c437f047529fd02eb6a3fbc23d433279de54d287db5b0ad5de7858",
           "url": "https://github.com/y1-community/rondo-mirror/releases/download/v1.0.1/rom-macos.zip"
         },
         {
@@ -125,8 +125,8 @@
           "platform": "windows",
           "model": "Y1",
           "type": "Type A",
-          "size": 729007185,
-          "sha256": "55468a72bb8a9d6ecebedb8795a0cb1d73e438c8283c80dc06d0f1c8c97e5cb2",
+          "size": 705659104,
+          "sha256": "4e5f2db7a5b56089e5295f50dcb8a5e1005032f7b697b499bbb714be1441b9c1",
           "url": "https://github.com/y1-community/rondo-mirror/releases/download/v1.0.1/rom-windows.zip"
         }
       ],
@@ -153,7 +153,7 @@
           "model": "Y1",
           "type": "Type A",
           "size": 844850473,
-          "sha256": "4a85e6ee40a362911205308e1e42e5c0fc68d07109e4082fa28b68793935042b",
+          "sha256": "cf1edf6b48743370c04e65152b68e53b19d3b3576781c7120de9c9e2e11cbd6a",
           "url": "https://github.com/y1-community/rondo-mirror/releases/download/v1.0.0/rom-linux.zip"
         },
         {
@@ -163,7 +163,7 @@
           "model": "Y1",
           "type": "Type A",
           "size": 703535522,
-          "sha256": "26b1b02bf46486a5532fd650016d9c50a7c6590523cd9a8318b36ce5838c33ca",
+          "sha256": "def49d9c19553df0ab7a4b2ff8a211158d2c6b9bb6e88b7b386eae23824c8892",
           "url": "https://github.com/y1-community/rondo-mirror/releases/download/v1.0.0/rom-macos.zip"
         },
         {
@@ -172,8 +172,8 @@
           "platform": "windows",
           "model": "Y1",
           "type": "Type A",
-          "size": 729007401,
-          "sha256": "77b7d05a4c70a60ec7bbf5bf2ff12f4ab885212d5fb610e29e8da53a5bcd2d96",
+          "size": 705659320,
+          "sha256": "2380f25dc39c088901e59125765ecb0e0a27ee52f3932643b183452d837190c0",
           "url": "https://github.com/y1-community/rondo-mirror/releases/download/v1.0.0/rom-windows.zip"
         }
       ],
