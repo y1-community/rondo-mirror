@@ -1,0 +1,32 @@
+# N0's tests (private/native-plan.md): small programs run on the Y1 with the Java layer stopped
+add_executable(s1 s1-display/s1.cpp)
+y1_private(s1)
+target_link_libraries(s1 PRIVATE y1_gui y1_ui y1_binder y1_utils y1_cutils EGL GLESv2)
+
+add_executable(hwvsync s1-display/hwvsync.cpp)
+add_executable(s1fb s1-display/s1fb.cpp)
+y1_private(s1fb)
+target_link_libraries(s1fb PRIVATE y1_ui y1_utils y1_cutils EGL GLESv2)
+
+add_executable(s5 s5-audio/s5.cpp)
+target_link_libraries(s5 PRIVATE OpenSLES)
+
+add_executable(s2 s2-video/s2.cpp)
+y1_private(s2)
+target_link_libraries(s2 PRIVATE y1_stagefright y1_stagefright_foundation y1_surfaceflinger y1_gui y1_ui y1_binder y1_utils y1_cutils EGL GLESv2)
+
+add_executable(s6 s6-wifi/s6.cpp)
+y1_private(s6)
+target_link_libraries(s6 PRIVATE y1_hardware_legacy y1_netutils y1_cutils)
+
+add_executable(s7 s7-power/s7.cpp)
+
+add_executable(s3 s3-bluetooth/s3.cpp)
+
+add_executable(s4 s4-fm/s4.cpp)
+y1_private(s4)
+target_link_libraries(s4 PRIVATE y1_fmjni y1_media y1_utils y1_binder)
+
+add_executable(s3a2dp s3-bluetooth/s3a2dp.cpp)
+y1_private(s3a2dp)
+target_link_libraries(s3a2dp PRIVATE y1_mtkbtextadpa2dp y1_media y1_binder y1_utils OpenSLES)

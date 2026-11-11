@@ -7,10 +7,12 @@ import { type Browse, registerBrowseRoutes } from "./browse.js";
 import { TvAccount } from "./tv.js";
 import type { Config } from "./config.js";
 import { registerCors } from "./cors.js";
+import { EqService, registerEqRoutes } from "./eq.js";
 import { Health } from "./health.js";
 import { type LyricsDeps, LyricsService, lrclibGet, registerLyricsRoutes } from "./lyrics.js";
 import { execRunner, Resolver, type YtdlpRunner } from "./resolver.js";
 import type { ServerUpdate } from "./serverUpdate.js";
+import { registerTimezoneRoutes, TimezoneService } from "./timezone.js";
 import { registerUpdateRoutes, type Updates } from "./updates.js";
 import { registerStreamRoutes, type UpstreamTiming } from "./stream.js";
 import { Store } from "./store.js";
@@ -25,7 +27,17 @@ export interface App {
 
 export async function buildApp(
   config: Config,
-  opts: { ytdlpRunner?: YtdlpRunner; upstreamTiming?: UpstreamTiming; lyrics?: Partial<LyricsDeps>; newCode?: () => string; tv?: TvAccount; updates?: Updates; serverUpdate?: ServerUpdate } = {},
+  opts: {
+    ytdlpRunner?: YtdlpRunner;
+    upstreamTiming?: UpstreamTiming;
+    lyrics?: Partial<LyricsDeps>;
+    newCode?: () => string;
+    tv?: TvAccount;
+    updates?: Updates;
+    serverUpdate?: ServerUpdate;
+    eq?: EqService;
+    timezone?: TimezoneService;
+  } = {},
 ): Promise<App> {
   const logs = new LogRing();
   const app = Fastify({
@@ -76,6 +88,7 @@ export async function buildApp(
   await registerAuth(app, (t) => admin.isDeviceToken(t), (req) => admin.seen(req));
   registerStreamRoutes(app, { config, resolver, health, timing: opts.upstreamTiming });
   app.get("/time", async () => ({ epochMs: Date.now() })); // clock sync for the device
+  registerTimezoneRoutes(app, { timezone: opts.timezone ?? new TimezoneService({ log: app.log }) }); // Rondo 2.0's time zone
   registerUpdateRoutes(app, opts.updates); // Settings › Software update
   // the first shorts of a Shorts list start resolving at once (their streams are asked for next)
   const routes = registerBrowseRoutes(app, { config, tv, prepare: (ids) => ids.forEach((id) => void resolver.resolve(id).catch(() => undefined)) });
@@ -88,6 +101,7 @@ export async function buildApp(
     ...opts.lyrics,
   });
   registerLyricsRoutes(app, { lyrics });
+  registerEqRoutes(app, opts.eq ?? new EqService()); // Rondo 2.0: Settings › Sound › Headphone match
 
   return { app, health, resolver, admin, tv };
 }
