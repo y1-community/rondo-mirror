@@ -291,12 +291,24 @@ firmware, so it points its owner to Innioasis Updater CE.
 
 ## Making a release
 
-1. Set the version everywhere at once: `tools/set-version.sh 3.0.1` (`native/core/version.h`,
-   the server's and the update page's `package.json` and `package-lock.json`). If every Y1 has to
-   get a change to the firmware around Rondo (`firmware/build.sh`, the boot image, anything outside
-   `/system/rondo`), raise `kFirmwareNeeded` in `native/core/version.h` too, and the major
-   version with it: that release installs only with Innioasis Updater CE (3.0.0 did, for the
-   firmware without the stock firmware's root backdoors).
+Rondo on the Y1 and the server are released apart, each with its own version and tags:
+`v<version>` for Rondo (the firmware, the update bundle, the dashboard it serves and the update
+page) and `server-v<version>` for the server and its updater. Most changes are the Y1's, and a
+Rondo release no longer means a server update. The server says its version (`GET /healthz`), and
+Rondo names the oldest server it works with: `kServerVersionNeeded` in `native/core/version.h`.
+When Rondo needs something only a newer server has, release the server first, then raise
+`kServerVersionNeeded` to that version in the Rondo release; a Rondo with an older server says so
+(**Server needs an update**). A server release keeps working with the Rondos already out there: it
+adds, and doesn't change or take away what they use.
+
+### Rondo (the Y1)
+
+1. Set its version: `tools/set-version.sh device 3.0.2` (`native/core/version.h`, the update page's
+   `package.json` and `package-lock.json`). If every Y1 has to get a change to the firmware around
+   Rondo (`firmware/build.sh`, the boot image, anything outside `/system/rondo`), raise
+   `kFirmwareNeeded` in `native/core/version.h` too, and the major version with it: that release
+   installs only with Innioasis Updater CE (3.0.0 did, for the firmware without the stock firmware's
+   root backdoors).
 2. Build and sign the bundle with the bundle key, kept outside the repo:
 
    ```bash
@@ -309,20 +321,35 @@ firmware, so it points its owner to Innioasis Updater CE.
    (`firmware/build.sh native/build/bundle/rondo-<version>.rondo`) and install `firmware/out/rom.zip`
    with Innioasis Updater CE, under a name of its own.
 4. Add the release to `CHANGELOG.md`, in words a Y1 owner understands. Commit, tag `v<version>`,
-   push both, and create a GitHub release for the tag as a draft, with one asset:
+   push both, and create a GitHub release for the tag as a draft, marked latest, with one asset:
    **`rondo-<version>.rondo`**. Say in the notes that it's for the **Y1, Type A**, and whether it
    needs Innioasis Updater CE (a new firmware number). Then publish it.
-5. Publishing starts `.github/workflows/release.yml`, which checks that the tag, the versions and
-   the bundle agree (its `VERSION`, and its signature against the public key in
+5. Publishing starts `.github/workflows/release.yml`, which checks that the tag, the device's
+   versions and the bundle agree (its `VERSION`, and its signature against the public key in
    `native/core/bundle.h`), builds the firmware from that bundle and attaches **`rom.zip`** (the
    name Innioasis Updater CE reads as Y1 Type A) and **`updater.png`** (its picture for the
-   release), builds the server and updater images for x86-64 and 64-bit ARM and publishes them as
-   `ghcr.io/jarvissax/rondo-server` and `rondo-updater` (`<version>` and `latest`), then
-   republishes the update page with the new `rondo.rondo` and `latest.json`. It takes about 20
-   minutes; if it fails, fix the cause and run it again from the Actions tab (it redoes the latest
-   release). The first time the images are published, set both packages to **Public** on GitHub
-   (your profile › Packages › the package › Package settings), or servers can't download them.
-6. Update your own server with **Update** on its admin page; it shares the version.
+   release), then republishes the update page with the new `rondo.rondo` and `latest.json`. It
+   takes about 15 minutes; if it fails, fix the cause and run it again from the Actions tab (it
+   redoes the latest release).
+
+### The server
+
+1. Set its version: `tools/set-version.sh server 3.1.0` (`server/package.json` and
+   `package-lock.json`).
+2. Add the release to `server/CHANGELOG.md` (a `## <version> (date)` section: it becomes the
+   release's notes). Commit, tag `server-v<version>`, and push both. That's all: no GitHub release
+   by hand.
+3. The tag starts `.github/workflows/server-release.yml`, which checks that the tag, the server's
+   version and the changelog's section agree, runs the server's tests, builds the server and
+   updater images for x86-64 and 64-bit ARM as `ghcr.io/jarvissax/rondo-server` and
+   `rondo-updater` (`<version>` and `latest`), and then publishes the GitHub release itself, with
+   no assets and **not** marked latest (that stays Rondo's, and Innioasis Updater CE lists only
+   releases with a `rom.zip`). A release made by the workflow starts no other workflow, so each
+   release has one run. The first time the images are published, set both packages to **Public**
+   on GitHub (your profile › Packages › the package › Package settings), or servers can't download
+   them.
+4. Update your own server with **Update** on its admin page, which hears of the release from GitHub
+   within 6 hours (`server/src/updates.ts`).
 
 Innioasis Updater CE lists every release of this repository that has a `rom.zip`, so a new one
 shows up there by itself (the Updater keeps its list for up to a day). Every bundle has to be

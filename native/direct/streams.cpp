@@ -222,6 +222,81 @@ void prepare(const std::string& id) {
 
 int lastResolveOk() { return g_lastOk; }
 
+// [from, end] of a format in 4 MB pieces, four fetched at once (each worker its own connection), written
+// in order, at most four pieces ahead of the writer (20 MB in memory at most). One 1 MB piece at a
+// time spent most of its time waiting for googlevideo's first byte: a download came in at 0.4 MB/s on
+// a Wi-Fi that does 1.9 (Nov 12); three at once made 2.5. False when a piece failed or the writer
+// stopped (the download then resumes from what it has, Api::download).
+static bool parallelPieces(const std::string& id, int itag, int64_t from, int64_t end, const Write& write) {
+  constexpr int64_t kBig = 4 << 20;
+  constexpr int kWorkers = 4, kAhead = 4;
+  struct Piece {
+    int code = 0;
+    std::string body;
+  };
+  const int64_t count = (end - from + kBig) / kBig;
+  std::mutex mu;
+  std::condition_variable cv;
+  std::map<int64_t, Piece> ready;
+  int64_t next = 0, written = 0;
+  std::atomic<bool> stop{false};
+  auto worker = [&] {
+    for (;;) {
+      int64_t k;
+      {
+        std::unique_lock<std::mutex> l(mu);
+        cv.wait(l, [&] { return stop || next >= count || next < written + kAhead; });
+        if (stop || next >= count) return;
+        k = next++;
+      }
+      int64_t s = from + k * kBig, e = std::min(end, s + kBig - 1);
+      Piece p;
+      // googlevideo may answer a range short, and a flaky Wi-Fi drops one now and then: what is still
+      // missing is asked for again, after 1, 2, 4 and 8 s without progress, before the piece fails
+      int misses = 0;
+      while (int64_t(p.body.size()) < e - s + 1) {
+        std::string more;
+        int code = fetch(id, itag, s + int64_t(p.body.size()), e, more);
+        if (!code && !more.empty()) {
+          p.body += more;
+          misses = 0;
+          continue;
+        }
+        if (++misses > 4 || stop) {
+          p.code = code ? code : 502;
+          break;
+        }
+        for (int w = 0; w < (4 << (misses - 1)) && !stop; w++) usleep(250000);  // 1, 2, 4, 8 s
+      }
+      std::lock_guard<std::mutex> l(mu);
+      ready[k] = std::move(p);
+      cv.notify_all();
+    }
+  };
+  std::vector<std::thread> workers;
+  for (int i = 0; i < kWorkers && i < count; i++) workers.emplace_back(worker);
+  bool ok = true;
+  for (int64_t k = 0; k < count && ok; k++) {
+    Piece p;
+    {
+      std::unique_lock<std::mutex> l(mu);
+      cv.wait(l, [&] { return ready.count(k) > 0; });
+      p = std::move(ready[k]);
+      ready.erase(k);
+      written = k + 1;
+      cv.notify_all();
+    }
+    ok = !p.code && write(p.body.data(), p.body.size());
+  }
+  {
+    std::lock_guard<std::mutex> l(mu);
+    stop = true;
+    cv.notify_all();
+  }
+  for (std::thread& t : workers) t.join();
+  return ok;
+}
+
 void streamRoute(const Request& r, Response& out) {
   std::string id;
   int itag = 0;
@@ -276,6 +351,8 @@ void streamRoute(const Request& r, Response& out) {
     if (!write(first->data(), first->size())) return false;
     int64_t at = start + int64_t(first->size());
     if (int64_t(first->size()) < kStep && end < 0) return true;  // the end of a file of unknown length
+    // a known end (a download, a whole file): the rest in parallel pieces
+    if (end >= 0) return at > end || parallelPieces(id, itag, at, end, write);
     while (end < 0 || at <= end) {
       int64_t e = end >= 0 ? std::min(end, at + kStep - 1) : at + kStep - 1;
       std::string piece;
@@ -385,6 +462,37 @@ static std::string sized(const std::string& url, int px) {
   return pathPart.substr(0, eq + 1) + out + query;
 }
 
+// i.ytimg.com's video stills. The addresses YouTube's lists give (hq720.jpg?sqp=…) come back as WebP
+// whatever the Accept header says, and the Y1 decodes JPEG and PNG only (Nov 12: no thumbnails in
+// YouTube's search or on a download's row); the same still without its query is a JPEG. A 16:9 still
+// is mqdefault (320 x 180, 14 kB) for the small sizes and hq720 for the large, falling back to
+// mqdefault for a video with no hq720; others (a Short's oardefault) keep their name.
+static bool ytimgStill(const std::string& url, int bucket, std::string& want, std::string& fallback) {
+  size_t scheme = url.find("://");
+  if (scheme == std::string::npos) return false;
+  size_t at = url.find('/', scheme + 3);
+  if (at == std::string::npos) return false;
+  std::string host = url.substr(scheme + 3, at - scheme - 3);
+  if (host != "i.ytimg.com" && !(host.size() > 10 && host.compare(host.size() - 10, 10, ".ytimg.com") == 0)) return false;
+  std::string p = url.substr(at, url.find_first_of("?#", at) - at);
+  for (const char* pre : {"/vi/", "/vi_webp/"}) {
+    size_t l = strlen(pre);
+    if (p.compare(0, l, pre) != 0) continue;
+    size_t slash = p.find('/', l);
+    if (slash == std::string::npos) return false;
+    std::string id = p.substr(l, slash - l), name = p.substr(slash + 1);
+    if (id.empty() || name.empty() || name.find('/') != std::string::npos) return false;
+    std::string stem = name.substr(0, name.rfind('.'));
+    std::string base = "https://i.ytimg.com/vi/" + id + "/";
+    bool still = stem == "hq720" || stem == "maxresdefault" || stem == "sddefault" || stem == "hqdefault" || stem == "mqdefault" ||
+                 stem == "default";
+    fallback = base + "mqdefault.jpg";
+    want = !still ? base + stem + ".jpg" : bucket <= 480 ? fallback : base + "hq720.jpg";
+    return true;
+  }
+  return false;
+}
+
 void thumbRoute(const Request& r, Response& out) {
   auto it = r.query.find("u");
   std::string url = it == r.query.end() ? "" : it->second;
@@ -398,9 +506,11 @@ void thumbRoute(const Request& r, Response& out) {
   // twice the size asked for, rounded up to one of four sizes, so the screens' rows, Now Playing and
   // the dashboard share one picture: the Y1 (and the browser) scale it down themselves
   int want2 = std::max(w, h) * 2, bucket = want2 <= 120 ? 120 : want2 <= 240 ? 240 : want2 <= 480 ? 480 : 720;
-  std::string want = sized(url, bucket);
+  std::string want = sized(url, bucket), fallback = url;
+  std::string still, stillFallback;
+  if (ytimgStill(url, bucket, still, stillFallback)) want = still, fallback = stillFallback;
   std::string type, body;
-  if (!thumbBytes(want, url, type, body)) return out.error(502, "upstream");
+  if (!thumbBytes(want, fallback, type, body)) return out.error(502, "upstream");
   out.type = type.empty() ? "image/jpeg" : type;
   out.headers.push_back("Cache-Control: public, max-age=604800");
   out.body = std::move(body);

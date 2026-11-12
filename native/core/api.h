@@ -33,6 +33,7 @@ struct Health {
   bool ok = false, cookiesOk = false, music = true, videos = true;
   int lastResolveOk = -1;  // the server's last playback check: -1 not tried yet, 0 failing, 1 working
   std::string ytdlp;      // empty: missing
+  std::string version;    // the server's own ("": one before 3.1.0, which didn't say)
 };
 
 class Api {

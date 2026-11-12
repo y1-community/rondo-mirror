@@ -25,6 +25,8 @@ describe("auth", () => {
     const res = await app.inject({ url: "/healthz" });
     expect(res.statusCode).toBe(200);
     expect(res.json()).toMatchObject({ ytdlp: null, lastResolveOk: null });
+    // the server's own version, which a Rondo checks against the oldest it works with (src/version.ts)
+    expect(res.json().version).toMatch(/^\d+\.\d+\.\d+$/);
   });
 
   it("rejects a request without a token", async () => {
