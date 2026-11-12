@@ -141,12 +141,35 @@ default). Android reports 36.43 fps, but the panel's hardware vsync comes every 
   (`debug.sf.nobootanimation=1`): the boot logo stays until Rondo's first frame.
 - **60 Hz (2.0).** The boot image's kernel has the panel driver's 60 Hz values in place of the
   stock 42 Hz ones ([native.md](native.md#display)).
+- **No root backdoors (3.0).** Innioasis's firmware (3.0.7's build manifest and `init.rc`), and
+  so the base ROM, runs two programs as root that nothing on the Y1 needs, both found by static
+  analysis on Nov 12:
+  - `aggdll` (init's `aggsrv`, setuid root) is the agent of "zxly" (`com.zxly.assist`), an app
+    pusher. It's a hidden `su` for apps signed with zxly's key and a silent installer of APKs from
+    the card. It also writes into `/system`: a copy of itself (`net_server`), a hidden copy of `pm`
+    (`mp`), a program of its own in `am`'s place (Android's script kept as `am2`), and `wifi_init`,
+    which it starts. `wifi_init` checks in with a server, downloads a file with `wifi_check` (the
+    `axel` download tool) and runs it as root. `/system/fonts/AndroidBoot.ttf` is its state file.
+    That server doesn't answer now (Nov 12). Wi-Fi doesn't need any of it.
+  - `libsp.so` (init's `spwall`) is "SPWall", a service that runs shell commands as root for other
+    programs.
+
+  `firmware/build.sh` takes all of them out and puts Android's `am` script back, and
+  `tools/firmware/BootImage.java` drops both services from `init.rc`. Since 3.0.1 SPWall's tools go
+  too, though nothing starts them: `libwp.so` (a packet filter that asks SPWall), `libld.so` (a
+  code injector) and `libip.so` (a renamed iptables; Android's own `iptables` stays), with
+  `/system/channel/qbchannel.ini`, the stock firmware's distribution tag. Rondo 3.0 needs this firmware
+  (firmware number 3), so a Y1 on 2.0.x gets it only by installing 3.0 with Innioasis Updater CE.
+  Rondo also removes the same files itself at each start if it finds them (a bundle put on an older
+  firmware by hand), with init's two services stopped (`native/services/base_rom.cpp`), and logs one
+  line when it does. `BGW` (`/system/xbin`, user
+  system) stays: it's MediaTek's Wi-Fi and modem coexistence helper, with no network code.
 - **Current time zones.** The base ROM's tzdata is 2012h; the firmware has IANA's 2026 data
   (`firmware/zoneinfo`).
 - **The firmware's number.** `firmware/build.sh` adds `ro.rondo.firmware=<n>` to
-  `/system/build.prop`: 2 for the 2.0 firmware (`kFirmwareNeeded` in `native/core/version.h`), 1
-  for 1.0.x's (`firmwareLevel` in `app/app/build.gradle.kts`; the first, 1.0.0, has no property
-  and counts as 1). Updates over Wi-Fi, the dashboard and the update page install only when the
+  `/system/build.prop`: `kFirmwareNeeded` in `native/core/version.h`, 3 for the 3.0 firmware (no
+  root backdoors), 2 for 2.0's (the first without Android), 1 for 1.0.x's (the first, 1.0.0, has no
+  property and counts as 1). Updates over Wi-Fi, the dashboard and the update page install only when the
   firmware is at least as new as the release needs.
 - **Updates without a flash (2.0).** A signed bundle unpacks into `/data/rondo/<version>`, named
   by `/data/rondo/current`; the start script runs it instead of `/system/rondo`, and after three

@@ -61,10 +61,10 @@ target_link_libraries(uitest PRIVATE rondo_ui rondo_platform_y1)
 target_link_options(uitest PRIVATE -Wl,-rpath-link,${Y1_LIB})
 add_executable(churn tools/churn.cpp)
 
-# The server client (N2): libcurl over OpenSSL and nghttp2, trusting the roots 1.0.x bundles
+# The server client (N2): libcurl over OpenSSL and nghttp2, trusting Let's Encrypt's roots (assets/certs)
 if(EXISTS ${TP}/lib/libcurl.a)
-  file(READ ${CMAKE_CURRENT_SOURCE_DIR}/../app/app/src/main/res/raw/isrg_root_x1.pem ROOT_X1)
-  file(READ ${CMAKE_CURRENT_SOURCE_DIR}/../app/app/src/main/res/raw/isrg_root_yr.pem ROOT_YR)
+  file(READ ${CMAKE_CURRENT_SOURCE_DIR}/assets/certs/isrg-root-x1.pem ROOT_X1)
+  file(READ ${CMAKE_CURRENT_SOURCE_DIR}/assets/certs/isrg-root-yr.pem ROOT_YR)
   # Google Trust Services' roots (pki.goog), for direct mode's YouTube and googlevideo: Android 4.2 only
   # knows them through GlobalSign's cross-signs, which end in January 2028
   set(GTS "")
@@ -112,7 +112,7 @@ target_include_directories(rondo_shell SYSTEM PRIVATE ${TP}/include)
 target_link_libraries(rondo_shell PUBLIC ff_avformat ff_avcodec ff_avutil)
 
 # rondo-core: the system services (services/core.h), forked at startup like rondo-player
-add_library(rondo_services STATIC services/host.cpp services/core_main.cpp services/wifi.cpp services/bluetooth.cpp services/clock.cpp)
+add_library(rondo_services STATIC services/host.cpp services/core_main.cpp services/wifi.cpp services/bluetooth.cpp services/clock.cpp services/base_rom.cpp)
 y1_private(rondo_services)
 target_include_directories(rondo_services SYSTEM PRIVATE ${TP}/include)
 target_link_libraries(rondo_services PUBLIC rondo_direct rondo_net y1_hardware_legacy y1_netutils y1_cutils tp_sqlite3 y1_mtkbtextadpa2dp y1_media y1_binder y1_utils)
