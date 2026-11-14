@@ -25,8 +25,12 @@ void findPhotos(std::vector<std::pair<std::string, int64_t>>& out);
 // Library › Organize the card (organize_screens.cpp): the plan for each storage root, the moves on a
 // thread of their own (the library, playlists and queue follow when they're done), how far they are
 std::unique_ptr<Screen> makeOrganize();
-std::vector<std::pair<std::string, OrganizePlan>> organizePlans();
-std::string organizeStart();  // "" when started, else why not
+// names: what the dashboard's lookup found for the shows and movies (fill_in.h)
+std::vector<std::pair<std::string, OrganizePlan>> organizePlans(const OrganizeNames& names = {});
+std::string organizeStart(const OrganizeNames& names = {});  // "" when started, else why not
+// the storage roots there are now, and a root's songs and videos as Organize sees them
+std::vector<std::string> organizeRoots();
+std::vector<OrganizeItem> organizeItems(const std::string& root);
 struct OrganizeStatus {
   bool running = false, finished = false;
   int done = 0, total = 0, moved = 0;
@@ -65,6 +69,9 @@ bool resumeWaitingForCard();  // the restore waits for the card (resumeRestore a
 // music_screens.cpp: a playlist, album or artist row's screen; a song's menu
 void openMusicContainer(const Item& item);
 void openSongMenu(const Item& song);
+// YouTube Music › Downloads (music_screens.cpp), and Home's row for it
+std::unique_ptr<Screen> makeMusicDownloads();
+Row musicDownloadsRow();
 std::string largeThumb(const std::string& thumb, int size);
 std::string artOf(const std::string& path, int size);
 // Wi-Fi (wifi_screens.cpp): its screen, and what Settings says about it (1.0.x's wifiName())

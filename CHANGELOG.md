@@ -5,6 +5,62 @@ Rondo's releases, newest first. Each one is on the
 Innioasis Updater CE and the update for a Y1 that already runs Rondo. Since 3.0.2 the server has
 releases of its own, in [server/CHANGELOG.md](server/CHANGELOG.md).
 
+## 3.0.3 (November 14, 2026)
+
+An update for the 3.0 firmware: Settings › System › Software update, the dashboard or the
+[update page](https://jarvissax.github.io/rondo/). It works with Rondo server 3.1.0 or newer, as
+3.0.2 does; with your own server, update it to Rondo server 3.2.0 (its admin page offers it) so
+YouTube Music downloads get their year and track number.
+
+### New
+
+- **The dashboard fills in what your songs' tags leave out** (Library › Fill in). A missing genre,
+  year, album or track number is looked up album by album in the iTunes Store, then MusicBrainz;
+  you see what was found for each album and untick any that look wrong, then it's saved into the
+  songs themselves (FLAC, MP3, M4A), where Rondo, Jellyfin and any other player find it. Only
+  what's missing is filled in.
+- **Lyrics for every song that has none,** from LRCLIB and timed where it has them, saved into the
+  song (or an `.lrc` beside it for a kind that can't hold them). Songs with lyrics keep theirs.
+- **Organize looks up a show's or a movie's years** on the dashboard when the names don't say them
+  (TVmaze for shows, Wikidata for movies): you pick the right one for each, and the folders keep
+  the years from then on.
+- **YouTube Music downloads.** Hold center on a song and choose **Download**, or **Download all** on
+  an album or playlist: the song goes to `Music/YouTube Music/Artist/Album (Year)/01 - Title.m4a`,
+  YouTube's own AAC with its artist, album, year, track number, cover and lyrics (timed where LRCLIB
+  has them) in its tags, as Jellyfin reads them. **YouTube Music › Home › Downloads** plays them from
+  the card, also with no connection; Library › Music has them too. The dashboard's Downloads saves
+  songs as well. With your own server, update it to Rondo server 3.2.0 for the year and the track
+  number (an older one names a song from its row).
+
+### Changed
+
+- **YouTube Music's Home looks like the app's:** each section is a titled shelf of covers (square for
+  songs, albums and playlists, wide for videos, round for artists), Downloads above them. Turn the
+  wheel to move along a shelf, which slides as you go, and on into the next one; the background
+  takes the chosen cover's color. Library stays a list.
+- **A song's menu has an icon for each action** (Play now, Play next, Add to queue, Start radio,
+  Download).
+- **Shows and movies go inside Videos,** the way Jellyfin expects them:
+  `Videos/Shows/Silo (2023-)/Season 01/`, `Videos/Shows/The Walking Dead (2010-2022)/Season 01/`
+  and `Videos/Movies/Arrival (2016)/`. A show still running is `(2023-)`, one that has ended
+  `(2010-2022)`. Organize moves what's in the old top-level `Shows` and `Movies` folders and
+  removes those folders once they're empty. Videos uploaded on the dashboard go to Videos.
+
+### Fixed
+
+- **A YouTube video downloads and plays in its original language.** On a video YouTube has dubbed,
+  Rondo (connected directly to YouTube) could take a dub, such as the English one of a Turkish
+  video; it takes the original track now. To get the original sound on a video downloaded before,
+  download it again.
+- **The dashboard's notes keep their distance** from what's above and below them.
+- **Changing Repeat or Shuffle no longer stops the song for a moment** (Now Playing's options, hold
+  center). Rondo decodes again only when the next song is already lined up; Play next from a song's
+  menu is the same.
+- **Library › Files slides in** like every other screen: the first time after a start, counting a
+  big card's free space held it up until its slide was over.
+- **The dashboard's Wheel acceleration and Wheel vibration** can be changed again (a choice's value
+  read as nothing).
+
 ## 3.0.2 (November 12, 2026)
 
 An update for the 3.0 firmware: Settings › System › Software update, the dashboard or the

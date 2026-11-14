@@ -4,6 +4,13 @@ The server's releases, newest first (tags `server-v<version>`, on the
 [releases page](https://github.com/jarvissax/rondo/releases)). Until 3.0.1 the server shared Rondo's
 version, and its changes are in Rondo's [CHANGELOG.md](../CHANGELOG.md).
 
+## 3.2.0 (November 14, 2026)
+
+- **YouTube Music downloads get their full details** (Rondo 3.0.3): `GET /music/song/:id` gives a
+  song's artist, album, year, track number and cover, from its queue row and its album's page.
+  Rondo works without it, but a song downloaded through an older server is named from its row,
+  without its year and track number.
+
 ## 3.1.1 (November 12, 2026)
 
 - **`/healthz` no longer sends the `api` number** that 3.1.0 added. Nothing reads it: Rondo tells

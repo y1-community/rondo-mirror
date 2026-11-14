@@ -1423,13 +1423,14 @@ $('#uploadBtn').addEventListener('click', () => fileInput.click());
 $('#dropPick').addEventListener('click', () => fileInput.click());
 fileInput.addEventListener('change', () => { enqueue([...fileInput.files]); fileInput.value = ''; });
 
-// where an upload goes by its kind, as Jellyfin keeps them: Music, Movies (else an existing Videos
-// folder), Pictures (else an existing Photos or DCIM folder), each made on the card when missing
+// where an upload goes by its kind: Music, Videos (Organize files them into Videos/Shows and
+// Videos/Movies, as Jellyfin keeps them), Pictures (else an existing Photos or DCIM folder), each made
+// on the card when missing
 function folderFor(ext) {
   const folders = S.library?.folders || [];
   const root = (folders[0] || '/storage/sdcard0/Music').split('/').slice(0, 3).join('/');
   const top = (re) => folders.find((f) => f.split('/').length === 4 && re.test(f.split('/')[3]));
-  if (VIDEO.includes(ext)) return top(/^movies$/i) || top(/^videos?$/i) || `${root}/Movies`;
+  if (VIDEO.includes(ext)) return top(/^videos?$/i) || `${root}/Videos`;
   if (PHOTOS.includes(ext)) return top(/^pictures$/i) || top(/^photos$/i) || top(/^dcim$/i) || `${root}/Pictures`;
   return top(/^music$/i) || `${root}/Music`;
 }
@@ -1831,7 +1832,9 @@ async function loadSettings() {
   }
 }
 function segHtml(key, options, cur, label) {
-  return `<div class="seg seg-wide" role="radiogroup" aria-label="${esc(label)}" data-key="${key}">${options.map(([v, l]) => `<button type="button" role="radio" aria-checked="${v === cur}" data-v="${JSON.stringify(v)}">${l}</button>`).join('')}</div>`;
+  // the value as JSON, escaped: a string's quotes ("off") had ended the attribute, so the Wheel's
+  // choices read as nothing
+  return `<div class="seg seg-wide" role="radiogroup" aria-label="${esc(label)}" data-key="${key}">${options.map(([v, l]) => `<button type="button" role="radio" aria-checked="${v === cur}" data-v="${esc(JSON.stringify(v))}">${l}</button>`).join('')}</div>`;
 }
 function renderSettings() {
   const s = S.settings;
@@ -2355,10 +2358,12 @@ async function forgetNet(id) {
 }
 
 // ---------- YouTube › Download ----------
-// The form (a link or an id, the height), then what's on its way (progress, cancel), then the videos on
-// the card (delete). Asked again every 2 s while one is on its way and the page is open.
+// The form (a link or an id; a video at the height chosen, or a YouTube Music song, saved to
+// Music/YouTube Music with its details and cover), then what's on its way (progress, cancel), then the
+// videos and songs on the card (save, delete). Asked again every 2 s while one is on its way.
 let dlTimer = 0;
 const DL_QUALITY = [[720, '720p'], [480, '480p'], [360, '360p']];
+const DL_KIND = [['video', 'Video'], ['song', 'Song']];
 async function loadDownloads() {
   clearTimeout(dlTimer);
   try {
@@ -2374,23 +2379,30 @@ function renderDownloads() {
   if (!el || !d) return;
   if (!$('#dlForm')) {
     el.innerHTML = `<div class="group"><form class="dl-form" id="dlForm">
-        <input type="text" id="dlVideo" placeholder="A YouTube link or video id" aria-label="YouTube link or video id" autocomplete="off" spellcheck="false">
+        <input type="text" id="dlVideo" placeholder="A YouTube or YouTube Music link, or an id" aria-label="YouTube or YouTube Music link, or an id" autocomplete="off" spellcheck="false">
+        ${segHtml('dlKind', DL_KIND, S.dlKind || 'video', 'Download as').replace('seg seg-wide', 'seg')}
         ${segHtml('dlQuality', DL_QUALITY, S.dlQuality || 480, 'Quality').replace('seg seg-wide', 'seg')}
         <button class="btn btn-primary" type="submit">${icon('download')}<span>Download</span></button></form></div>
       <div class="group" id="dlRows"></div>`;
+    syncDlKind();
   }
   const jobs = d.jobs.filter((j) => j.state !== 'done').reverse();
   const rows = [
     ...jobs.map((j) => {
       const going = j.state === 'running' || j.state === 'waiting';
       const part = !j.stage || j.stage.startsWith('Downloading');  // the percent only while a part comes in, as on the Y1
-      const sub = j.state === 'running' ? `${esc(j.stage || 'Downloading')} · ${part ? `${j.percent}% · ` : ''}${j.quality}p` : j.state === 'waiting' ? `Waiting · ${j.quality}p` : `Didn’t download: ${esc(j.error)}`;
+      const what = j.kind === 'song' ? 'Song' : `${j.quality}p`;
+      const sub = j.state === 'running' ? `${esc(j.stage || 'Downloading')} · ${part ? `${j.percent}% · ` : ''}${what}` : j.state === 'waiting' ? `Waiting · ${what}` : `Didn’t download: ${esc(j.error)}`;
       return `<div class="row dl-row"><span class="tile t-downloads">${icon('download')}</span>
         <div class="row-main"><div class="row-title">${esc(j.title)}</div><div class="row-sub">${sub}</div>
           ${j.state === 'running' ? `<div class="dl-bar"><span style="width:${j.percent}%"></span></div>` : ''}</div>
         ${going ? `<button class="btn btn-sm" type="button" data-dl-cancel="${esc(j.id)}">Cancel</button>`
-          : `<button class="btn btn-sm" type="button" data-dl-again="${esc(j.id)}" data-q="${j.quality}">Try again</button>`}</div>`;
+          : `<button class="btn btn-sm" type="button" data-dl-again="${esc(j.id)}" data-q="${j.quality}" data-song="${j.kind === 'song' ? 1 : ''}">Try again</button>`}</div>`;
     }),
+    ...(d.songs || []).map((x) => `<div class="row dl-row"><span class="tile t-music">${icon('note')}</span>
+        <div class="row-main"><div class="row-title">${esc(x.title)}</div><div class="row-sub">${esc(x.subtitle)}</div></div>
+        <a class="btn btn-sm" href="/api/files/download?path=${encodeURIComponent(x.file)}" download>Save</a>
+        <button class="btn btn-sm btn-red-text" type="button" data-dl-delete="${esc(x.file)}" data-song="1" aria-label="Delete ${esc(x.title)}">${icon('trash')}</button></div>`),
     ...d.files.map((x) => `<div class="row dl-row"><span class="tile t-videos">${icon('film')}</span>
         <div class="row-main"><div class="row-title">${esc(x.title)}</div><div class="row-sub">${esc(x.subtitle)}</div></div>
         <a class="btn btn-sm" href="/api/files/download?path=${encodeURIComponent(x.file)}" download>Save</a>
@@ -2398,20 +2410,32 @@ function renderDownloads() {
   ];
   $('#dlRows').innerHTML = rows.length ? rows.join('') : '<div class="row-empty">Nothing downloaded yet.</div>';
 }
+// a song has no height to pick
+function syncDlKind() {
+  const q = $('.seg[data-key="dlQuality"]');
+  if (q) q.hidden = (S.dlKind || 'video') === 'song';
+}
+$('#dlBody').addEventListener('input', (e) => {
+  if (e.target.id !== 'dlVideo' || !/music\.youtube\.com/i.test(e.target.value)) return;
+  S.dlKind = 'song';  // a YouTube Music link: a song
+  $$('button', $('.seg[data-key="dlKind"]')).forEach((x) => x.setAttribute('aria-checked', String(JSON.parse(x.dataset.v) === 'song')));
+  syncDlKind();
+});
 $('#dlBody').addEventListener('click', async (e) => {
-  const seg = e.target.closest('.seg[data-key="dlQuality"]'), b = e.target.closest('[data-v]');
+  const seg = e.target.closest('.seg[data-key="dlQuality"], .seg[data-key="dlKind"]'), b = e.target.closest('[data-v]');
   if (seg && b) {
     $$('button', seg).forEach((x) => x.setAttribute('aria-checked', String(x === b)));
-    S.dlQuality = JSON.parse(b.dataset.v);
+    if (seg.dataset.key === 'dlKind') S.dlKind = JSON.parse(b.dataset.v), syncDlKind();
+    else S.dlQuality = JSON.parse(b.dataset.v);
     return;
   }
   const cancel = e.target.closest('[data-dl-cancel]'), again = e.target.closest('[data-dl-again]'), del = e.target.closest('[data-dl-delete]');
   try {
     if (cancel) S.downloads = await api('POST', '/api/downloads/cancel', { id: cancel.dataset.dlCancel });
-    else if (again) S.downloads = await api('POST', '/api/downloads', { video: again.dataset.dlAgain, quality: +again.dataset.q }, { timeout: 40000 });
+    else if (again) S.downloads = await api('POST', '/api/downloads', { video: again.dataset.dlAgain, quality: +again.dataset.q, song: !!again.dataset.song }, { timeout: 40000 });
     else if (del) {
       const name = del.closest('.row').querySelector('.row-title').textContent;
-      if (!await confirmSheet({ title: `Delete “${name}”?`, text: 'It goes from the card with its subtitles.', action: 'Delete' })) return;
+      if (!await confirmSheet({ title: `Delete “${name}”?`, text: del.dataset.song ? 'It goes from the card.' : 'It goes from the card with its subtitles.', action: 'Delete' })) return;
       S.downloads = await api('DELETE', `/api/downloads?file=${encodeURIComponent(del.dataset.dlDelete)}`);
       toast('Deleted from the card');
     } else return;
@@ -2424,7 +2448,7 @@ $('#dlBody').addEventListener('submit', async (e) => {
   const input = $('#dlVideo'), video = input.value.trim();
   if (!video) return input.focus();
   try {
-    S.downloads = await api('POST', '/api/downloads', { video, quality: S.dlQuality || 480 }, { timeout: 40000 });
+    S.downloads = await api('POST', '/api/downloads', { video, quality: S.dlQuality || 480, song: (S.dlKind || 'video') === 'song' }, { timeout: 40000 });
     input.value = '';
     toast('Downloading on your Rondo');
     renderDownloads();
@@ -3229,9 +3253,12 @@ function editSmart(p) {
 }
 
 // ---------- Organize the card (Library › Organize the card on the Rondo) ----------
-// Every song into Music/Artist/Album (Year)/, every video into Shows/ or Movies/, as Jellyfin expects:
-// first what would move, then the moves only when asked. Playlists, plays and ratings go along.
+// Every song into Music/Artist/Album (Year)/, every video into Videos/Shows/ or Videos/Movies/, as
+// Jellyfin expects: first what would move, then the moves only when asked. Playlists, plays and ratings
+// go along. A series' years and a movie's year, when the names don't say them, are looked up online
+// (TVmaze, Wikidata) and picked here; the folders keep them from then on.
 $('#organizeBtn').addEventListener('click', openOrganize);
+const ORG = { plan: null, lookup: null, pick: {} };  // pick: a title's key -> the match taken (-1: as it is)
 async function openOrganize() {
   openSheet('<h2>Organize the card</h2><p>Working out where everything goes…</p>');
   let plan;
@@ -3241,27 +3268,129 @@ async function openOrganize() {
     return;
   }
   if (plan.status.running) return organizeProgress();
-  const n = plan.moves.length;
+  ORG.plan = plan, ORG.lookup = plan.lookup, ORG.pick = {};
+  for (const m of plan.lookup?.matches || []) ORG.pick[m.title.key] = m.pick;
+  renderOrganize();
+  if (plan.lookup?.running) followLookup();
+  else if (Object.keys(orgNames()).length) replan();  // a lookup made earlier: its picks in the plan
+}
+// what's been picked, as POST /api/organize takes it
+function orgNames() {
+  const names = {};
+  for (const m of ORG.lookup?.matches || []) {
+    const f = m.found[ORG.pick[m.title.key] ?? -1];
+    if (f) names[m.title.key] = { name: f.name, years: f.years };
+  }
+  return names;
+}
+const titleWithYears = (name, years) => (years ? `${name} (${years})` : name);
+function orgTitlesHtml() {
+  const titles = ORG.plan.titles || [], lk = ORG.lookup;
+  if (!titles.length) return '';
+  const keys = new Set(titles.map((t) => t.key));
+  const matches = (lk?.matches || []).filter((m) => keys.has(m.title.key));
+  const shows = titles.filter((t) => t.series).length, movies = titles.length - shows;
+  const what = [shows ? plural(shows, 'show') : '', movies ? plural(movies, 'movie') : ''].filter(Boolean).join(' and ');
+  let body;
+  if (lk?.running) {
+    body = `<div class="meter"><span style="--p:${lk.total ? (lk.done / lk.total) * 100 : 0}%"></span></div><p class="row-sub">Looking up ${lk.done + 1 > lk.total ? lk.total : lk.done + 1} of ${lk.total}…</p>`;
+  } else if (!matches.length) {
+    body = `<p class="row-sub">Years for ${esc(what)}, the way Jellyfin names them: a show “Silo (2023-)” while it runs, “The Walking Dead (2010-2022)” once it’s over, a movie “Arrival (2016)”.</p>
+      <button class="btn" type="button" data-r="lookup">${icon('globe')}<span>Look up ${titles.length === 1 ? 'its years' : 'their years'}</span></button>
+      <p class="row-sub org-src">From TVmaze (shows) and Wikidata (movies).</p>`;
+  } else {
+    body = `<div class="org-list org-titles">${matches.map((m) => {
+      const t = m.title, pick = ORG.pick[t.key] ?? -1;
+      const opts = m.found.map((f, i) => `<option value="${i}"${i === pick ? ' selected' : ''}>${esc(titleWithYears(f.name, f.years))}${f.detail ? ` · ${esc(f.detail)}` : ''}</option>`).join('');
+      const none = m.failed ? 'Couldn’t be looked up: as it is' : m.found.length ? 'Leave it as it is' : 'Not found: as it is';
+      return `<div class="org-move"><span class="tag">${t.series ? 'Show' : 'Movie'}</span><div class="org-pick">
+        <div class="org-to">${esc(titleWithYears(t.name, t.years))}${t.series ? ` <span class="org-sub">${plural(t.files, 'episode')}</span>` : ''}</div>
+        <label class="select"><span class="sr-only">Name it</span><select data-key="${esc(t.key)}">${opts}<option value="-1"${pick < 0 ? ' selected' : ''}>${none}</option></select>${icon('down')}</label></div></div>`;
+    }).join('')}</div>`;
+  }
+  return `<h3 class="org-h">Shows and movies</h3>${body}`;
+}
+function orgMovesHtml() {
+  const plan = ORG.plan, n = plan.moves.length;
   const kindName = { song: 'Song', video: 'Video', lyrics: 'Lyrics', subtitles: 'Subtitles', cover: 'Picture' };
   const shown = plan.moves.slice(0, 400);
-  const facts = [['Songs', plan.songs, 'Music/Artist/Album (Year)/01 - Title'], ['Videos', plan.videos, 'Shows/Series (Year)/Season 01, or Movies/Title (Year)'],
+  const facts = [['Songs', plan.songs, 'Music/Artist/Album (Year)/01 - Title'], ['Videos', plan.videos, 'Videos/Shows/Series (Years)/Season 01, or Videos/Movies/Title (Year)'],
     ['Lyrics and subtitles', plan.sidecars, 'with their songs and videos'], ['Folder pictures', plan.covers, 'with their albums'], ['Already in place', plan.alreadyThere, '']]
     .filter((x) => x[1]);
-  openSheet(`<h2>Organize the card</h2>
-    <p>${n ? `Folders the way Jellyfin, Plex and Kodi expect them, from the songs’ tags. Nothing moves until you press Organize; playlists, plays and ratings go along.` : 'Everything on the card is where it belongs.'}</p>
-    <dl class="facts">${facts.map(([k, v, sub]) => `<dt>${k}</dt><dd>${v}${sub ? ` <span class="org-sub">${esc(sub)}</span>` : ''}</dd>`).join('')}</dl>
+  return `<dl class="facts">${facts.map(([k, v, sub]) => `<dt>${k}</dt><dd>${v}${sub ? ` <span class="org-sub">${esc(sub)}</span>` : ''}</dd>`).join('')}</dl>
     ${n ? `<div class="org-list" role="list" aria-label="The moves">${shown.map((m) => `<div class="org-move" role="listitem"><span class="tag">${kindName[m.kind] || m.kind}</span>
       <div><div class="org-to">${esc(m.to)}</div><div class="org-from">from ${esc(m.from)}</div></div></div>`).join('')}
-      ${n > shown.length ? `<div class="row-empty">and ${plural(n - shown.length, 'more')}</div>` : ''}</div>` : ''}
-    <div class="sheet-actions"><button class="btn" type="button" data-r="0">${n ? 'Cancel' : 'Close'}</button>${n ? `<button class="btn btn-primary" type="button" data-r="go">Organize ${plural(n, 'file')}</button>` : ''}</div>`);
+      ${n > shown.length ? `<div class="row-empty">and ${plural(n - shown.length, 'more')}</div>` : ''}</div>` : ''}`;
+}
+function renderOrganize() {
+  const n = ORG.plan.moves.length;
+  openSheet(`<h2>Organize the card</h2>
+    <p>${n ? `Folders the way Jellyfin, Plex and Kodi expect them, from the songs’ tags. Nothing moves until you press Organize; playlists, plays and ratings go along.` : 'Everything on the card is where it belongs.'}</p>
+    <div id="orgTitles">${orgTitlesHtml()}</div>
+    <div id="orgMoves">${orgMovesHtml()}</div>
+    <div class="sheet-actions"><button class="btn" type="button" data-r="0">${n ? 'Cancel' : 'Close'}</button><button class="btn btn-primary" type="button" data-r="go"${n ? '' : ' hidden'}>Organize ${plural(n, 'file')}</button></div>`);
   $('[data-r="0"]', sheet).addEventListener('click', () => sheet.close());
-  $('[data-r="go"]', sheet)?.addEventListener('click', async (e) => {
-    e.target.closest('button').disabled = true;
-    try { await api('POST', '/api/organize'); organizeProgress(); } catch (err) {
+  wireOrgTitles();
+  $('[data-r="go"]', sheet).addEventListener('click', async (e) => {
+    const b = e.target.closest('button');
+    b.disabled = true;
+    try { await api('POST', '/api/organize', { names: orgNames() }); organizeProgress(); } catch (err) {
       if (err.status !== 401) toast(`Didn’t start. ${err.code && err.code !== 'pair' ? err.code : reason(err)}`, 'err');
-      e.target.closest('button').disabled = false;
+      b.disabled = false;
     }
   });
+}
+function wireOrgTitles() {
+  $('[data-r="lookup"]', sheet)?.addEventListener('click', async (e) => {
+    e.target.closest('button').disabled = true;
+    try { ORG.lookup = await api('POST', '/api/organize/lookup'); } catch (err) {
+      if (err.status !== 401) toast(`Didn’t look them up. ${err.code && err.code !== 'pair' ? err.code : reason(err)}`, 'err');
+      e.target.closest('button').disabled = false;
+      return;
+    }
+    refreshOrgTitles();
+    followLookup();
+  });
+  for (const sel of sheet.querySelectorAll('#orgTitles select')) sel.addEventListener('change', () => { ORG.pick[sel.dataset.key] = Number(sel.value); replan(); });
+}
+function refreshOrgTitles() {
+  const box = document.getElementById('orgTitles');
+  if (!box) return false;
+  box.innerHTML = orgTitlesHtml();
+  wireOrgTitles();
+  return true;
+}
+async function followLookup() {
+  for (;;) {
+    await new Promise((r) => setTimeout(r, 700));
+    if (!document.getElementById('orgTitles')) return;  // the sheet was closed
+    try { ORG.lookup = await api('GET', '/api/organize/lookup'); } catch { continue; }
+    if (!ORG.lookup.running) {
+      ORG.pick = {};
+      for (const m of ORG.lookup.matches) ORG.pick[m.title.key] = m.pick;
+      refreshOrgTitles();
+      return replan();
+    }
+    refreshOrgTitles();
+  }
+}
+// the plan again with the names picked (what moves where changes with them)
+let replanning = 0;
+async function replan() {
+  const mine = ++replanning;
+  try {
+    const plan = await api('POST', '/api/organize/plan', { names: orgNames() }, { timeout: 60000 });
+    if (mine !== replanning || !document.getElementById('orgMoves')) return;
+    ORG.plan.moves = plan.moves, ORG.plan.songs = plan.songs, ORG.plan.videos = plan.videos;
+    ORG.plan.sidecars = plan.sidecars, ORG.plan.covers = plan.covers, ORG.plan.alreadyThere = plan.alreadyThere;
+    document.getElementById('orgMoves').innerHTML = orgMovesHtml();
+    const go = $('[data-r="go"]', sheet), n = plan.moves.length;
+    go.hidden = !n;
+    go.textContent = `Organize ${plural(n, 'file')}`;
+    $('[data-r="0"]', sheet).textContent = n ? 'Cancel' : 'Close';
+  } catch (err) {
+    if (err.status !== 401) toast(`Couldn’t work it out again. ${reason(err)}`, 'err');
+  }
 }
 async function organizeProgress() {
   openSheet('<h2>Organizing</h2><div class="meter"><span id="orgBar" style="--p:0%"></span></div><p id="orgNote">Starting…</p>');
@@ -3282,6 +3411,147 @@ async function organizeProgress() {
     }
     await new Promise((r) => setTimeout(r, 700));
   }
+}
+
+// ---------- Fill in: what the songs' tags leave out (the dashboard only) ----------
+// A song's missing genre, year, album and track number, looked up album by album (the iTunes Store,
+// then MusicBrainz), shown for review and then saved into the files; lyrics from LRCLIB for every song
+// without any, saved into the file. It all runs on the Rondo: this page can close and come back.
+$('#fillBtn').addEventListener('click', openFillIn);
+const FILL = { skip: new Set(), proposals: [] };
+const fillClose = () => { $('[data-r="0"]', sheet)?.addEventListener('click', () => sheet.close()); };
+// the iTunes Stores of this browser's languages' regions ("en-GB" -> "gb"), the songs' own and the US one besides
+const storeCountries = () => [...new Set((navigator.languages || [navigator.language]).map((l) => (l.split('-')[1] || '').toLowerCase()).filter((c) => /^[a-z]{2}$/.test(c)))];
+async function openFillIn() {
+  openSheet('<h2>Fill in what’s missing</h2><p>Looking at your songs…</p>');
+  let r;
+  try { r = await api('GET', '/api/fill', undefined, { timeout: 30000 }); } catch (e) {
+    if (e.status !== 401) openSheet(`<h2>Fill in what’s missing</h2><p>${esc(reason(e))}</p><div class="sheet-actions"><button class="btn" type="button" data-r="0">Close</button></div>`);
+    return fillClose();
+  }
+  const st = r.status;
+  if (st.running) return fillProgress();
+  const waiting = st.kind === 'details' && st.finished && st.proposed;  // found, not saved yet
+  const m = r.summary, lacking = [['No genre', m.noGenre], ['No year', m.noYear], ['No album', m.noAlbum], ['No track number', m.noTrack]].filter((x) => x[1]);
+  const minutes = Math.max(1, Math.round((m.albums * 3) / 60));  // about 3 s an album on the Y1 (the services allow a request a second)
+  openSheet(`<h2>Fill in what’s missing</h2>
+    <p>Rondo looks up what your songs’ tags leave out and saves it into the songs themselves, where Rondo, Jellyfin and any other player find it. Only what’s missing is filled in.</p>
+    <section class="fill-sec">
+      <h3>${icon('tag')}<span>Song details</span></h3>
+      ${lacking.length ? `<dl class="facts">${lacking.map(([k, v]) => `<dt>${k}</dt><dd>${plural(v, 'song')}</dd>`).join('')}</dl>
+      ${waiting ? `<p class="row-sub">Found for ${plural(st.proposed, 'album')}, not saved yet.</p>
+      <div class="fill-acts"><button class="btn btn-primary" type="button" data-r="review">${icon('check')}<span>Review and save</span></button>
+        <button class="btn" type="button" data-r="details">${icon('search')}<span>Look up again</span></button></div>`
+      : `<p class="row-sub">Asked of the iTunes Store, then MusicBrainz, album by album: ${plural(m.albums, 'album')}, about ${plural(minutes, 'minute')}. You see what was found before anything is saved.</p>
+      <button class="btn btn-primary" type="button" data-r="details">${icon('search')}<span>Look up details</span></button>`}`
+      : `<p class="row-sub">Every song has its genre, year, album and track number.</p>`}
+    </section>
+    <section class="fill-sec">
+      <h3>${icon('lyrics')}<span>Lyrics</span></h3>
+      <p class="row-sub">Lyrics from LRCLIB, timed where it has them, for every song that has none (songs with lyrics keep theirs). Saved into the song, or an .lrc beside it when its kind can’t hold them.</p>
+      <button class="btn" type="button" data-r="lyrics"${m.songs ? '' : ' disabled'}>${icon('search')}<span>Look up lyrics</span></button>
+    </section>
+    ${m.unsupported ? `<div class="note info">${icon('info')}<span>${plural(m.unsupported, 'song')} ${m.unsupported === 1 ? 'is' : 'are'} of a kind Rondo can’t save details into yet (Ogg, WMA and others): ${m.unsupported === 1 ? 'its' : 'their'} details stay as they are.</span></div>` : ''}
+    <div class="sheet-actions"><button class="btn" type="button" data-r="0">Close</button></div>`);
+  fillClose();
+  const start = async (btn, path, body) => {
+    btn.disabled = true;
+    try { await api('POST', path, body); fillProgress(); } catch (err) {
+      if (err.status !== 401) toast(`Didn’t start. ${err.code && err.code !== 'pair' ? err.code : reason(err)}`, 'err');
+      btn.disabled = false;
+    }
+  };
+  $('[data-r="review"]', sheet)?.addEventListener('click', fillReview);
+  $('[data-r="details"]', sheet)?.addEventListener('click', (e) => start(e.target.closest('button'), '/api/fill/details', { countries: storeCountries() }));
+  $('[data-r="lyrics"]', sheet)?.addEventListener('click', (e) => start(e.target.closest('button'), '/api/fill/lyrics'));
+}
+async function fillProgress() {
+  const titles = { details: 'Looking up details', lyrics: 'Looking up lyrics', save: 'Saving' };
+  openSheet(`<h2 id="fillH">Working</h2><div class="meter"><span id="fillBar" style="--p:0%"></span></div><p id="fillNote">Starting…</p>
+    <p class="row-sub">It runs on your Rondo: you can close this and come back.</p>
+    <div class="sheet-actions"><button class="btn" type="button" data-r="0">Hide</button><button class="btn" type="button" data-r="stop">Stop</button></div>`);
+  fillClose();
+  $('[data-r="stop"]', sheet).addEventListener('click', async (e) => {
+    e.target.closest('button').disabled = true;
+    try { await api('POST', '/api/fill/cancel'); } catch { /* the next status says */ }
+  });
+  for (;;) {
+    let st;
+    try { st = await api('GET', '/api/fill/status'); } catch { await new Promise((r) => setTimeout(r, 1500)); continue; }
+    const bar = document.getElementById('fillBar'), note = document.getElementById('fillNote');
+    if (!bar) return;  // the sheet was closed: the job goes on
+    document.getElementById('fillH').textContent = titles[st.kind] || 'Working';
+    bar.style.setProperty('--p', `${st.total ? (st.done / st.total) * 100 : 0}%`);
+    const at = Math.min(st.done + 1, st.total);
+    note.textContent = st.kind === 'details' ? `Album ${at} of ${st.total}… found for ${plural(st.proposed, 'album')} so far.`
+      : st.kind === 'lyrics' ? `Song ${at} of ${st.total}… lyrics for ${plural(st.saved, 'song')} so far${st.synced ? ` (${st.synced} timed)` : ''}.`
+      : `Saving into song ${at} of ${st.total}… Keep your Rondo on.`;
+    if (!st.running) return st.kind === 'details' && st.proposed ? fillReview() : fillDone(st);
+    await new Promise((r) => setTimeout(r, 1000));
+  }
+}
+async function fillReview() {
+  let st;
+  try { st = await api('GET', '/api/fill/status?proposals=1', undefined, { timeout: 30000 }); } catch (e) {
+    if (e.status !== 401) toast(reason(e), 'err');
+    return;
+  }
+  FILL.proposals = st.proposals || [];
+  FILL.skip = new Set();
+  const songs = () => FILL.proposals.filter((p) => !FILL.skip.has(p.id)).reduce((n, p) => n + p.songs, 0);
+  const shown = FILL.proposals.slice(0, 600);
+  const left = [st.notFound ? `${plural(st.notFound, 'album')} weren’t found` : '', st.failed ? `${plural(st.failed, 'album')} couldn’t be looked up` : '',
+    st.canceled ? 'the lookup was stopped' : ''].filter(Boolean);
+  const same = (a, b) => a.toLowerCase().replace(/ - (single|ep)$/i, '') === b.toLowerCase();
+  openSheet(`<h2>Found for ${plural(FILL.proposals.length, 'album')}</h2>
+    <p>Untick any that look wrong, then save. Only what the songs lack is saved${left.length ? `; ${left.join(', ')}` : ''}.</p>
+    <div class="org-list fill-list" role="list">${shown.map((p) => {
+      const what = [p.genre ? `Genre <b>${esc(p.genre)}</b>` : '', p.year ? `Year <b>${p.year}</b>` : '', p.newAlbum ? `Album <b>${esc(p.newAlbum)}</b>` : '',
+        p.tracks ? plural(p.tracks, 'track number') : ''].filter(Boolean).join(' · ');
+      const from = !same(p.foundAlbum, p.album || p.foundAlbum) || !p.foundArtist.toLowerCase().includes(p.artist.toLowerCase().split(/[,&]/)[0].trim())
+        ? ` <span class="org-sub">(${esc(p.foundAlbum)} by ${esc(p.foundArtist)})</span>` : '';
+      return `<label class="org-move fill-row" role="listitem"><input type="checkbox" data-id="${p.id}" checked>
+        <div><div class="org-to">${esc(p.artist)} — ${esc(p.album || p.foundAlbum)}</div><div class="org-from">${what}</div>
+        <div class="org-from">${plural(p.songs, 'song')} · ${esc(p.source)}${from}</div></div></label>`;
+    }).join('')}${FILL.proposals.length > shown.length ? `<div class="row-empty">and ${plural(FILL.proposals.length - shown.length, 'more')}, saved with them</div>` : ''}</div>
+    <div class="sheet-actions"><button class="btn" type="button" data-r="0">Not now</button><button class="btn btn-primary" type="button" data-r="save">Save into ${plural(songs(), 'song')}</button></div>`);
+  fillClose();
+  const save = $('[data-r="save"]', sheet);
+  for (const box of sheet.querySelectorAll('.fill-row input')) box.addEventListener('change', () => {
+    const id = Number(box.dataset.id);
+    if (box.checked) FILL.skip.delete(id); else FILL.skip.add(id);
+    const n = songs();
+    save.textContent = `Save into ${plural(n, 'song')}`;
+    save.disabled = !n;
+  });
+  save.addEventListener('click', async () => {
+    save.disabled = true;
+    try { await api('POST', '/api/fill/save', { skip: [...FILL.skip] }); fillProgress(); } catch (err) {
+      if (err.status !== 401) toast(`Didn’t save. ${err.code && err.code !== 'pair' ? err.code : reason(err)}`, 'err');
+      save.disabled = false;
+    }
+  });
+}
+function fillDone(st) {
+  let title, text;
+  if (st.kind === 'lyrics') {
+    title = st.saved ? `Lyrics for ${plural(st.saved, 'song')}` : 'No lyrics found';
+    text = [st.synced ? `${st.synced} of them timed` : '', st.beside ? `${st.beside} in an .lrc beside the song` : '', st.had ? `${plural(st.had, 'song')} had ${st.had === 1 ? 'its' : 'theirs'} already` : '',
+      st.notFound ? `${plural(st.notFound, 'song')} LRCLIB doesn’t have` : '', st.instrumental ? `${plural(st.instrumental, 'instrumental')} left as ${st.instrumental === 1 ? 'it is' : 'they are'}` : '',
+      st.failed ? `${plural(st.failed, 'song')} couldn’t be looked up` : ''].filter(Boolean).join('; ');
+  } else if (st.kind === 'save') {
+    title = `Saved into ${plural(st.saved, 'song')}`;
+    text = st.errors.length ? `${plural(st.errors.length, 'song')} couldn’t be saved into:` : 'Your library shows the new details now.';
+  } else {
+    title = 'Nothing found';
+    text = [st.notFound ? `${plural(st.notFound, 'album')} weren’t found` : '', st.failed ? `${plural(st.failed, 'album')} couldn’t be looked up` : ''].filter(Boolean).join('; ');
+  }
+  if (st.canceled) text = `Stopped. ${text}`;
+  openSheet(`<h2>${esc(title)}</h2>${st.stopped ? `<div class="note err">${icon('alert')}<span>${esc(st.stopped)}.</span></div>` : ''}<p>${esc(text)}${text && !/[.:]$/.test(text) ? '.' : ''}</p>
+    ${st.errors.length ? `<div class="org-list">${st.errors.slice(0, 100).map((x) => `<div class="org-move"><div class="org-from">${esc(x)}</div></div>`).join('')}</div>` : ''}
+    <div class="sheet-actions"><button class="btn btn-primary" type="button" data-r="0">Done</button></div>`);
+  fillClose();
+  if (st.saved) setTimeout(() => loadLibrary(true), 800);  // the new genres and years
 }
 
 // ---------- Files: the card as it is (the Y1's Library › Folders) ----------

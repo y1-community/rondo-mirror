@@ -48,8 +48,8 @@ covers, and the album's songs are listed below. A song's details show its tags a
 stars to rate it.
 
 - **Upload** music, videos and photos straight onto the card, several at a time: music goes to
-  Music, videos to Movies (or the Videos folder you have), photos to Pictures; **Organize** then
-  puts them where Jellyfin expects them. Expect about 3 MB a second over the Y1's Wi-Fi.
+  Music, videos to Videos, photos to Pictures; **Organize** then puts them where Jellyfin expects
+  them. Expect about 3 MB a second over the Y1's Wi-Fi.
 - **Play** a song on the Y1, or **delete** it.
 - **Rescan** after copying files onto the card some other way.
 - **Photos:** every picture on the card by folder; click one to see it large, with the arrow keys,
@@ -60,7 +60,22 @@ stars to rate it.
   videos keep their plays, ratings and playlists when they move, and a moved folder takes them all.
 - **Organize:** every file into the folders Jellyfin expects (as **Library › Organize the card** on
   the Y1), with the full list of moves to look through first; nothing moves until you press
-  **Organize**.
+  **Organize**. Shows go to `Videos/Shows/Silo (2023-)/Season 01/` and movies to
+  `Videos/Movies/Arrival (2016)/`. When a show's or a movie's name doesn't say its years,
+  **Look up their years** asks TVmaze (shows) and Wikidata (movies) and lets you pick the right one
+  for each; a show still running is `(2023-)`, one that has ended `(2010-2022)`. The folders keep
+  the years from then on.
+- **Fill in** (the dashboard only): what your songs' tags leave out, looked up online and saved into
+  the songs themselves, where Rondo, Jellyfin and any other player find them. Only what's missing is
+  filled in, nothing is replaced.
+  - **Song details:** a missing genre, year, album or track number, album by album from the iTunes
+    Store (in English, from the stores of your browser's languages, the songs' own and the US one),
+    then MusicBrainz. You see what was found for each album and untick any that look wrong before
+    anything is saved. About three seconds an album.
+  - **Lyrics:** LRCLIB's, timed where it has them, for every song that has none: saved into the
+    song (FLAC, MP3, M4A), or as an `.lrc` beside a song whose kind can't hold them.
+  - It runs on the Y1: close the page and come back to see how far it got. Details are saved into
+    FLAC, MP3 (ID3v2) and MP4/M4A files; Ogg, WMA and the other kinds keep theirs as they are.
 - **Playlists:** make, rename and delete playlists of songs on the card, add songs (from the
   playlist, or **Add to playlist** in a song's details), put them in order and play them on the Y1.
   They're the same playlists as in the Y1's Library: `.m3u8` files in the card's `Playlists` folder.
@@ -156,9 +171,11 @@ connected to. The Y1's own **Settings › YouTube** does the same on the Y1.
   ready and whether an account is connected.
 
 **Downloads:** paste a YouTube link (or a video id), pick 720p, 480p or 360p and press
-**Download**: your Rondo saves it to `Videos/YouTube` on its card with its subtitles. The list
-shows each one on its way (**Cancel**), then the videos on the card (**Save** to your computer, or
-the bin to delete one with its subtitles). The Y1 has the same list in YouTube › Home › Downloads.
+**Download**: your Rondo saves it to `Videos/YouTube` on its card with its subtitles. Choose **Song**
+(a YouTube Music link picks it by itself) to save a song instead, to `Music/YouTube Music` with its
+details, cover and lyrics. The list shows each one on its way (**Cancel**), then the videos and songs
+on the card (**Save** to your computer, or the bin to delete one). The Y1 has the same lists in
+YouTube › Home › Downloads and YouTube Music › Home › Downloads.
 
 ## For developers
 
