@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "generated_at": "2026-11-14T16:53:11Z",
+  "generated_at": "2026-11-15T17:12:52Z",
   "source_repo": "jarvissax/rondo",
   "source_fallback_repo": "",
   "mirror_repo": "y1-community/rondo-mirror",
@@ -67,6 +67,90 @@
     }
   ],
   "releases": [
+    {
+      "tag": "v3.0.4",
+      "title": "Portable Flashing Package: Rondo 3.0.4",
+      "source_title": "Rondo 3.0.4",
+      "source_url": "https://github.com/jarvissax/rondo/releases/tag/v3.0.4",
+      "source_fallback_url": "",
+      "published_at": "2026-11-15T16:15:57Z",
+      "prerelease": false,
+      "source_notes": "**For the Innioasis Y1, Type A, on the Rondo 3.0 firmware.** An update you can install over Wi-Fi. It works with Rondo server 3.1.0 or newer; WhatsApp needs your own server at [Rondo server 3.3.0](https://github.com/jarvissax/rondo/releases/tag/server-v3.3.0) or newer (its admin page offers it).\n\n**New**\n- **WhatsApp**, through your own Rondo server, in the main menu under YouTube Music. Your chats and groups with their pictures and unread counts; messages with senders, replies, reactions, photos, videos and voice messages. Write on the wheel keyboard (also as a reply), record a voice message with the Y1's built-in microphone, or send a photo or a video from the card. Photos open full screen, videos in the player, voice messages play in place of the music. Contacts and groups have a profile with the picture, number and about. No notifications: what came is there when you open WhatsApp, and a chat you open is marked read. Recent chats and the media you opened are kept on the card (up to 1 GB). Link it once on your server's admin page ([how](https://github.com/jarvissax/rondo/blob/main/docs/server.md#whatsapp)). WhatsApp's terms don't allow unofficial apps like this one, and WhatsApp may close accounts that use them.\n- **Settings \u203a YouTube \u203a Connection test** checks YouTube from where it comes now.\n\n**Changed**\n- **The server has its own place:** Settings \u203a Server on the Y1 and a Server page on the dashboard. YouTube's **Connect to** offers Directly to YouTube, and Through my server once one is connected; connecting a server no longer switches YouTube over by itself.\n- **YouTube, YouTube Music and WhatsApp have colored tiles** with their logos in white, like every other entry.\n- **A main-menu entry new in an update goes where it belongs** (WhatsApp under YouTube Music), even in a menu you reordered.\n\nThe full list is in [CHANGELOG.md](https://github.com/jarvissax/rondo/blob/main/CHANGELOG.md).\n",
+      "assets": [
+        {
+          "name": "rom-windows.zip",
+          "source_asset": "rom.zip",
+          "platform": "windows",
+          "model": "Y1",
+          "type": "Type A",
+          "size": 771542365,
+          "sha256": "e0c5b377e5f6d504dbf87536cee2c4448f36c0fbfb125802647bd506b845a21c",
+          "url": "https://github.com/y1-community/rondo-mirror/releases/download/v3.0.4/rom-windows.zip",
+          "fallback_url": "https://github.com/ryan-specter/rondo-mirror/releases/download/v3.0.4/rom-windows.zip"
+        },
+        {
+          "name": "rom-windows-legacy.zip",
+          "source_asset": "rom.zip",
+          "platform": "windows-legacy",
+          "model": "Y1",
+          "type": "Type A",
+          "size": 533303512,
+          "sha256": "7975597462a18723b482b81bccdc45221004c1506829ce6ed5c85a16d441a086",
+          "url": "https://github.com/y1-community/rondo-mirror/releases/download/v3.0.4/rom-windows-legacy.zip",
+          "fallback_url": "https://github.com/ryan-specter/rondo-mirror/releases/download/v3.0.4/rom-windows-legacy.zip"
+        },
+        {
+          "name": "rom-linux.zip",
+          "source_asset": "rom.zip",
+          "platform": "linux",
+          "model": "Y1",
+          "type": "Type A",
+          "size": 828371969,
+          "sha256": "82d313303532fa8a9307f0fdb148a6c2c04cd6a6c751bbc6722d6c0fe08eb860",
+          "url": "https://github.com/y1-community/rondo-mirror/releases/download/v3.0.4/rom-linux.zip",
+          "fallback_url": "https://github.com/ryan-specter/rondo-mirror/releases/download/v3.0.4/rom-linux.zip"
+        },
+        {
+          "name": "rom-linux-arm64.zip",
+          "source_asset": "rom.zip",
+          "platform": "linux-arm64",
+          "model": "Y1",
+          "type": "Type A",
+          "size": 653276203,
+          "sha256": "96fe2709c3294617f4b7f996ca67458eaac20ddb8293d93b9d619d3e47a92f03",
+          "url": "https://github.com/y1-community/rondo-mirror/releases/download/v3.0.4/rom-linux-arm64.zip",
+          "fallback_url": "https://github.com/ryan-specter/rondo-mirror/releases/download/v3.0.4/rom-linux-arm64.zip"
+        },
+        {
+          "name": "rom-linux-legacy.zip",
+          "source_asset": "rom.zip",
+          "platform": "linux-legacy",
+          "model": "Y1",
+          "type": "Type A",
+          "size": 531717797,
+          "sha256": "12300e1583561a155bd748cab2f354caea7dbe6e0c602a8c69712cbbae1ab282",
+          "url": "https://github.com/y1-community/rondo-mirror/releases/download/v3.0.4/rom-linux-legacy.zip",
+          "fallback_url": "https://github.com/ryan-specter/rondo-mirror/releases/download/v3.0.4/rom-linux-legacy.zip"
+        },
+        {
+          "name": "rom-macos.zip",
+          "source_asset": "rom.zip",
+          "platform": "macos",
+          "model": "Y1",
+          "type": "Type A",
+          "size": 579979967,
+          "sha256": "184c00cb867281b030eff338bb4c06646984f719b18639e8ba98c8c2153c9475",
+          "url": "https://github.com/y1-community/rondo-mirror/releases/download/v3.0.4/rom-macos.zip",
+          "fallback_url": "https://github.com/ryan-specter/rondo-mirror/releases/download/v3.0.4/rom-macos.zip"
+        }
+      ],
+      "original_assets": [
+        "rom.zip",
+        "rondo-3.0.4.rondo",
+        "updater.png"
+      ],
+      "stats_url": "https://github.com/y1-community/rondo-mirror/releases/download/v3.0.4/stats.txt"
+    },
     {
       "tag": "v3.0.3",
       "title": "Portable Flashing Package: Rondo 3.0.3",
