@@ -102,8 +102,7 @@ void avatar(Env& e, const std::string& jid, bool group, Rect r) {
     e.c.shape(r, r.w / 2, kCircles[hashOf(jid) % 4]);
     int g = int(r.w * 0.56f);
     e.c.layer(4);
-    e.icons.draw(e.c, group ? Icon::People : Icon::Person, {r.x + float((int(r.w) - g) / 2), r.y + float((int(r.h) - g) / 2), float(g), float(g)},
-                 0xffcfd8dc);
+    e.icons.drawInTile(e.c, group ? Icon::People : Icon::Person, r, float(g), 0xffcfd8dc);
   }
   if (t) {
     e.c.layer(5);  // over the placeholder's glyph while it fades in
@@ -367,7 +366,7 @@ class ChatsScreen : public Screen {
     e.c.shape(r, r.w / 2, circle);
     int g = e.dp(18);
     e.c.layer(4);
-    e.icons.draw(e.c, icon, {r.x + float((a - g) / 2), r.y + float((a - g) / 2), float(g), float(g)}, rgb(0xffffff));
+    e.icons.drawInTile(e.c, icon, r, float(g), rgb(0xffffff));
     float x = r.x + a + e.dp(10);
     Label t = label(e, title, 13, true, w - x - e.dp(10));
     Label s = label(e, sub, 10, false, w - x - e.dp(10));
@@ -513,7 +512,7 @@ class ContactsScreen : public Screen {
         e.c.shape(r, r.w / 2, kSel);
         int g = e.dp(16);
         e.c.layer(4);
-        e.icons.draw(e.c, Icon::Search, {r.x + float((a - g) / 2), r.y + float((a - g) / 2), float(g), float(g)}, rgb(0xffffff));
+        e.icons.drawInTile(e.c, Icon::Search, r, float(g), rgb(0xffffff));
         Label t = label(e, "Search", 13, true);
         drawLabel(e, t, r.x + a + e.dp(10), y + float((int(rowH) - t.h) / 2), kText);
         continue;
@@ -780,6 +779,16 @@ class RecordScreen : public Screen {
     return true;  // the time and the level move
   }
   int64_t wakeAt() const override { return now_ns() + 100 * kMs; }
+  // The ring breathes with the sound every frame: the recorder's level (the loudest of each tenth of a
+  // second) on a loudness scale, -40 to 0 dB, followed by a spring that rises fast and settles slowly.
+  // Drawn at each new level as it was, it jumped ten times a second.
+  bool step(float dt) override {
+    PlayerState s = g_player.state();
+    float target = 0;
+    if (s.recording && s.recordLevel > 0) target = clamp01((20 * log10f(s.recordLevel / 100.f) + 40) / 40);
+    bool moving = ring_.step(target, dt, target > ring_.x ? 30.f : 9.f);
+    return s.recording || moving;
+  }
   void draw(Env& e, float w, float h) override {
     PlayerState s = g_player.state();
     e.c.layer(0);
@@ -793,7 +802,7 @@ class RecordScreen : public Screen {
     }
     float cx = w / 2, cy = top + (h - top) * 0.42f;
     // the microphone in a circle that breathes with the sound
-    float base = float(e.dp(64)), grow = base * 0.45f * clamp01(s.recordLevel / 60.f);
+    float base = float(e.dp(64)), most = base * 0.45f, grow = most * clamp01(ring_.x);
     e.c.layer(1);
     e.c.shape({cx - (base + grow) / 2, cy - (base + grow) / 2, base + grow, base + grow}, (base + grow) / 2, 0x3300a884);
     e.c.layer(2);
@@ -803,7 +812,7 @@ class RecordScreen : public Screen {
     e.icons.draw(e.c, Icon::Mic, {cx - g / 2.f, cy - g / 2.f, float(g), float(g)}, rgb(0xffffff));
     std::string t = formatTime(int(s.recordMs / 1000));
     Label tl = label(e, stopping_ ? "Sending\xe2\x80\xa6" : t, 18, true);
-    float ty = cy + base / 2 + grow / 2 + e.dp(10);
+    float ty = cy + base / 2 + most / 2 + e.dp(10);  // below the ring at its largest: it stays put
     drawLabel(e, tl, centerText(0, w, tl.w), ty, kText);
     bool on = s.recording && (now_ns() - started_) / 500000000 % 2 == 0;
     if (s.recording) {
@@ -821,6 +830,7 @@ class RecordScreen : public Screen {
   int64_t started_ = 0, stopAt_ = 0;
   int seconds_ = 0;
   bool stopping_ = false, done_ = false, everRecorded_ = false;
+  Spring ring_;  // how far the ring has grown with the sound, 0-1
 };
 
 // ===================================================================================================
@@ -1022,7 +1032,7 @@ class PickScreen : public Screen {
       drawLabel(e, s, x, ty + n.h + e.dp(1), kMuted);
       if (p.video) {
         int g = e.dp(14);
-        e.icons.draw(e.c, Icon::Play, {r.x + float((a - g) / 2), r.y + float((a - g) / 2), float(g), float(g)}, rgb(0xffffff));
+        e.icons.drawInTile(e.c, Icon::Play, r, float(g), rgb(0xffffff));
       }
     }
     e.c.popClip();

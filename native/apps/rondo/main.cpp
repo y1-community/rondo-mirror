@@ -308,9 +308,13 @@ int main(int argc, char** argv) {
   Canvas canvas;
   if (!canvas.init(display->width(), display->height())) return 1;
   Text text;
-  // the color emoji next to the bundled Roboto
+  // the color emoji: emoji.ttf in the data folder when there is one (it stays through updates), else the
+  // one next to the bundled Roboto
   std::string emoji = std::string(regular).substr(0, std::string(regular).rfind('/') + 1) + "NotoColorEmoji.ttf";
-  if (!text.init(fonts, access(regular, R_OK) == 0 ? regular : nullptr, access(emoji.c_str(), R_OK) == 0 ? emoji.c_str() : nullptr)) return 1;
+  std::string ownEmoji = data + "/emoji.ttf";
+  const char* emojiFirst = access(ownEmoji.c_str(), R_OK) == 0 ? ownEmoji.c_str() : nullptr;
+  const char* emojiElse = access(emoji.c_str(), R_OK) == 0 ? emoji.c_str() : nullptr;
+  if (!text.init(fonts, access(regular, R_OK) == 0 ? regular : nullptr, emojiFirst ? emojiFirst : emojiElse, emojiFirst ? emojiElse : nullptr)) return 1;
   if (!text.loadAdvances(advances)) fprintf(stderr, "rondo: no advance table at %s: text widths will differ from 1.0.x\n", advances);
   text.loadKerning(kerningFile.c_str());
   Icons icons;
@@ -464,6 +468,7 @@ int main(int argc, char** argv) {
     if (downloadsTick()) changed = true;  // YouTube › Download's queue
     if (g_core.expire()) changed = true;  // requests given up on (no network, or no answer in 30 s)
     streamsNetwork(status.online);  // read with the status, every 500 ms
+    aheadTick(now_ns());            // the next song's and the resting row's streams, found meanwhile
     soundTick();
     playStatsTick();
     if (g_library.applyScan()) changed = true;  // a background scan's files and tags
@@ -571,6 +576,7 @@ int main(int argc, char** argv) {
       if (int64_t wake = powerWakeAt()) timeout = std::max(0, std::min(timeout, int((wake - now_ns()) / kMs) + 1));
       if (int64_t wake = mainQueueWakeAt()) timeout = std::max(0, std::min(timeout, int((wake - now_ns()) / kMs) + 1));
       if (int64_t wake = g_core.wakeAt()) timeout = std::max(0, std::min(timeout, int((wake - now_ns()) / kMs) + 1));
+      if (int64_t wake = aheadWakeAt()) timeout = std::max(0, std::min(timeout, int((wake - now_ns()) / kMs) + 1));
       int r = poll(p, 6, timeout);
       if (runMainQueue()) moving = true;  // the dashboard's requests, on this thread
       if (r > 0 && (p[4].revents & POLLIN)) {  // drawing may start again after a suspend
