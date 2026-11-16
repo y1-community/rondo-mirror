@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "generated_at": "2026-11-16T09:42:48Z",
+  "generated_at": "2026-11-16T13:02:20Z",
   "source_repo": "jarvissax/rondo",
   "source_fallback_repo": "",
   "mirror_repo": "y1-community/rondo-mirror",
@@ -67,6 +67,258 @@
     }
   ],
   "releases": [
+    {
+      "tag": "v3.1.2",
+      "title": "Portable Flashing Package: Rondo 3.1.2",
+      "source_title": "Rondo 3.1.2",
+      "source_url": "https://github.com/jarvissax/rondo/releases/tag/v3.1.2",
+      "source_fallback_url": "",
+      "published_at": "2026-11-16T12:28:18Z",
+      "prerelease": false,
+      "source_notes": "\nAn update for the 3.0 firmware: Settings \u203a System \u203a Software update, the dashboard or the\n[update page](https://jarvissax.github.io/rondo/). It works with Rondo server 3.1.0 or newer, as\n3.1.1 does. Shorts, fixed and smoother, through a Rondo server and directly.\n\n### Fixed\n\n- **Shorts raced through the list:** moving on from a short whose sound was still opening left that\n  short's \"Can't play\" on the next one, which Shorts then skipped too, and the one after it, until the\n  list ran out. Each short now plays, and four in a row that really won't (no network, the server down)\n  stop it with \"Can't play Shorts right now\"; Next tries again.\n- **Shorts never run out:** more come as you go, a page that doesn't come is asked for again, and\n  Next at the end of what has come waits for more. A list kept open for more than half an hour (or\n  through a restart of the server) starts again from a fresh first page instead of ending. The\n  \"3 of 16+\" count is gone.\n- **Shorts move smoothly:** a short plays at 480p at most (the Shorts box is 202 by 360; at 720p one\n  frame in ten came late), and the swipe to the next one keeps all its frames: the short you leave\n  pauses at once, and the next one starts as the swipe ends.\n- **YouTube directly, on a phone's hotspot:** a hotspot refuses many new connections, and each refusal\n  failed a request, so a short could take 5-9 s to start. Rondo now asks again at once, as it always\n  has with a Rondo server: about 3 s.\n\n",
+      "assets": [
+        {
+          "name": "rom-windows.zip",
+          "source_asset": "rom.zip",
+          "platform": "windows",
+          "model": "Y1",
+          "type": "Type A",
+          "size": 771538807,
+          "sha256": "62f90c6b2e526cd9b97e163b2a0abe72026ba92e12f0fb724ec28861a062e3bb",
+          "url": "https://github.com/y1-community/rondo-mirror/releases/download/v3.1.2/rom-windows.zip",
+          "fallback_url": "https://github.com/ryan-specter/rondo-mirror/releases/download/v3.1.2/rom-windows.zip"
+        },
+        {
+          "name": "rom-windows-legacy.zip",
+          "source_asset": "rom.zip",
+          "platform": "windows-legacy",
+          "model": "Y1",
+          "type": "Type A",
+          "size": 533299954,
+          "sha256": "22317482ef8d43089b9740e928b8e0859e2c3259ce70273f3eeaa7147993c1f9",
+          "url": "https://github.com/y1-community/rondo-mirror/releases/download/v3.1.2/rom-windows-legacy.zip",
+          "fallback_url": "https://github.com/ryan-specter/rondo-mirror/releases/download/v3.1.2/rom-windows-legacy.zip"
+        },
+        {
+          "name": "rom-linux.zip",
+          "source_asset": "rom.zip",
+          "platform": "linux",
+          "model": "Y1",
+          "type": "Type A",
+          "size": 828368411,
+          "sha256": "b92ebb62c79ee19450e0527bcf48f82554c16039cad26e2cef09d0ac1a69d83a",
+          "url": "https://github.com/y1-community/rondo-mirror/releases/download/v3.1.2/rom-linux.zip",
+          "fallback_url": "https://github.com/ryan-specter/rondo-mirror/releases/download/v3.1.2/rom-linux.zip"
+        },
+        {
+          "name": "rom-linux-arm64.zip",
+          "source_asset": "rom.zip",
+          "platform": "linux-arm64",
+          "model": "Y1",
+          "type": "Type A",
+          "size": 653272645,
+          "sha256": "f134e34bb8dc0ca314485d0de00cceb7ed1a1c46c725c460129d36c858fadd5c",
+          "url": "https://github.com/y1-community/rondo-mirror/releases/download/v3.1.2/rom-linux-arm64.zip",
+          "fallback_url": "https://github.com/ryan-specter/rondo-mirror/releases/download/v3.1.2/rom-linux-arm64.zip"
+        },
+        {
+          "name": "rom-linux-legacy.zip",
+          "source_asset": "rom.zip",
+          "platform": "linux-legacy",
+          "model": "Y1",
+          "type": "Type A",
+          "size": 531714239,
+          "sha256": "40a214c1925bc29bf6571c7dd8d85edc18c6a9ae9150be8a65ae59d9e8e30ddc",
+          "url": "https://github.com/y1-community/rondo-mirror/releases/download/v3.1.2/rom-linux-legacy.zip",
+          "fallback_url": "https://github.com/ryan-specter/rondo-mirror/releases/download/v3.1.2/rom-linux-legacy.zip"
+        },
+        {
+          "name": "rom-macos.zip",
+          "source_asset": "rom.zip",
+          "platform": "macos",
+          "model": "Y1",
+          "type": "Type A",
+          "size": 579976409,
+          "sha256": "f1db9492b18421b99b14a9b777b3e509410aa96cf9bafb9aaf695b136b672fd6",
+          "url": "https://github.com/y1-community/rondo-mirror/releases/download/v3.1.2/rom-macos.zip",
+          "fallback_url": "https://github.com/ryan-specter/rondo-mirror/releases/download/v3.1.2/rom-macos.zip"
+        }
+      ],
+      "original_assets": [
+        "rom.zip",
+        "rondo-3.1.2.rondo",
+        "updater.png"
+      ],
+      "stats_url": "https://github.com/y1-community/rondo-mirror/releases/download/v3.1.2/stats.txt"
+    },
+    {
+      "tag": "v3.1.1",
+      "title": "Portable Flashing Package: Rondo 3.1.1",
+      "source_title": "Rondo 3.1.1",
+      "source_url": "https://github.com/jarvissax/rondo/releases/tag/v3.1.1",
+      "source_fallback_url": "",
+      "published_at": "2026-11-16T11:31:36Z",
+      "prerelease": false,
+      "source_notes": "An update for the 3.0 firmware: Settings \u203a System \u203a Software update, the dashboard or the\n[update page](https://jarvissax.github.io/rondo/). It works with Rondo server 3.1.0 or newer, as\n3.1.0 does; Rondo server 3.5.1 fixes WhatsApp's unread counts and shows mentions by name.\n\n### New\n\n- **An emoji font of your own:** an `emoji.ttf` in Rondo's data folder is used instead of the bundled\n  emoji, drawn at the same size and in the same place, and kept through updates. With a Mac you can\n  make one from Apple's emoji ([how](docs/using.md#apples-emoji-from-your-own-mac)).\n\n### Fixed\n\n- **Recording a voice message:** the ring around the microphone grows and settles smoothly with your\n  voice (it was redrawn ten times a second, in jumps), and the time under it stays in place.\n\n",
+      "assets": [
+        {
+          "name": "rom-windows.zip",
+          "source_asset": "rom.zip",
+          "platform": "windows",
+          "model": "Y1",
+          "type": "Type A",
+          "size": 771532359,
+          "sha256": "f95c58d023dba00675f5fde3820b8098032f8533e510283328c393121b6c5ae7",
+          "url": "https://github.com/y1-community/rondo-mirror/releases/download/v3.1.1/rom-windows.zip",
+          "fallback_url": "https://github.com/ryan-specter/rondo-mirror/releases/download/v3.1.1/rom-windows.zip"
+        },
+        {
+          "name": "rom-windows-legacy.zip",
+          "source_asset": "rom.zip",
+          "platform": "windows-legacy",
+          "model": "Y1",
+          "type": "Type A",
+          "size": 533293506,
+          "sha256": "3fe73737b2b8d91b21cbede0237d40f795837cc0d2fb2d02c13345aba27fc9d4",
+          "url": "https://github.com/y1-community/rondo-mirror/releases/download/v3.1.1/rom-windows-legacy.zip",
+          "fallback_url": "https://github.com/ryan-specter/rondo-mirror/releases/download/v3.1.1/rom-windows-legacy.zip"
+        },
+        {
+          "name": "rom-linux.zip",
+          "source_asset": "rom.zip",
+          "platform": "linux",
+          "model": "Y1",
+          "type": "Type A",
+          "size": 828361963,
+          "sha256": "dc5e9bd7ddf7865bc091570c190bbd5b14bc184f027ee4e7ec49a3dac86d6f3c",
+          "url": "https://github.com/y1-community/rondo-mirror/releases/download/v3.1.1/rom-linux.zip",
+          "fallback_url": "https://github.com/ryan-specter/rondo-mirror/releases/download/v3.1.1/rom-linux.zip"
+        },
+        {
+          "name": "rom-linux-arm64.zip",
+          "source_asset": "rom.zip",
+          "platform": "linux-arm64",
+          "model": "Y1",
+          "type": "Type A",
+          "size": 653266197,
+          "sha256": "848499812b4c472295a828d32737f666c8f1d0cd4b8c558607ca2d27f23f1e1a",
+          "url": "https://github.com/y1-community/rondo-mirror/releases/download/v3.1.1/rom-linux-arm64.zip",
+          "fallback_url": "https://github.com/ryan-specter/rondo-mirror/releases/download/v3.1.1/rom-linux-arm64.zip"
+        },
+        {
+          "name": "rom-linux-legacy.zip",
+          "source_asset": "rom.zip",
+          "platform": "linux-legacy",
+          "model": "Y1",
+          "type": "Type A",
+          "size": 531707791,
+          "sha256": "264e0be7a674b383a92a1e5ff53de5d1baa88088a4fc81a6c673e0fcceb32f6d",
+          "url": "https://github.com/y1-community/rondo-mirror/releases/download/v3.1.1/rom-linux-legacy.zip",
+          "fallback_url": "https://github.com/ryan-specter/rondo-mirror/releases/download/v3.1.1/rom-linux-legacy.zip"
+        },
+        {
+          "name": "rom-macos.zip",
+          "source_asset": "rom.zip",
+          "platform": "macos",
+          "model": "Y1",
+          "type": "Type A",
+          "size": 579969962,
+          "sha256": "3796d731f6879057a77a10116ae7e4a94cd2d72caf40fdf8210c19b08768e063",
+          "url": "https://github.com/y1-community/rondo-mirror/releases/download/v3.1.1/rom-macos.zip",
+          "fallback_url": "https://github.com/ryan-specter/rondo-mirror/releases/download/v3.1.1/rom-macos.zip"
+        }
+      ],
+      "original_assets": [
+        "rom.zip",
+        "rondo-3.1.1.rondo",
+        "updater.png"
+      ],
+      "stats_url": "https://github.com/y1-community/rondo-mirror/releases/download/v3.1.1/stats.txt"
+    },
+    {
+      "tag": "v3.1.0",
+      "title": "Portable Flashing Package: Rondo 3.1.0",
+      "source_title": "Rondo 3.1.0",
+      "source_url": "https://github.com/jarvissax/rondo/releases/tag/v3.1.0",
+      "source_fallback_url": "",
+      "published_at": "2026-11-16T10:38:14Z",
+      "prerelease": false,
+      "source_notes": "An update for the 3.0 firmware: Settings \u203a System \u203a Software update, the dashboard or the\n[update page](https://jarvissax.github.io/rondo/). It works with Rondo server 3.1.0 or newer, as\n3.0.5 does.\n\n### Changed\n\n- **Songs and videos start sooner on YouTube and YouTube Music:** while a song plays, Rondo has the\n  next one's streams found, and so for the song or video you rest on in a list for half a second.\n  Play and Next then start without waiting for that: through a Rondo server about 1.2 s instead of\n  6-7 s for a song it hadn't found yet, and directly it saves YouTube's lookup too. Only where the\n  streams are is found ahead; nothing is downloaded. The next Rondo server (3.5.0) also finds a new\n  song's streams in about 2 s instead of 5, and answers these early asks at once; the servers out\n  now find them too, a moment slower.\n- **Icons sit centered in their tiles**, on the Rondo and on its dashboard. Each is placed by how it\n  looks, not just by its outline: Library no longer sits low, the gauge (Wheel acceleration) no longer\n  sits high, WhatsApp's logo no longer leans left, play triangles sit a touch right, and an odd\n  leftover pixel is split instead of always going right and down.\n- **YouTube Music's and WhatsApp's logos are a little smaller on their tiles**, matching the other\n  icons and the dashboard.\n- **The dashboard's Theme preview shows Library's own icon** (the shelf) instead of a folder.\n\n",
+      "assets": [
+        {
+          "name": "rom-windows.zip",
+          "source_asset": "rom.zip",
+          "platform": "windows",
+          "model": "Y1",
+          "type": "Type A",
+          "size": 771531335,
+          "sha256": "ed7b15c90330ea5420debb6856fa897b9f7234e50e952564caee53280ceb4334",
+          "url": "https://github.com/y1-community/rondo-mirror/releases/download/v3.1.0/rom-windows.zip",
+          "fallback_url": "https://github.com/ryan-specter/rondo-mirror/releases/download/v3.1.0/rom-windows.zip"
+        },
+        {
+          "name": "rom-windows-legacy.zip",
+          "source_asset": "rom.zip",
+          "platform": "windows-legacy",
+          "model": "Y1",
+          "type": "Type A",
+          "size": 533292482,
+          "sha256": "a56c61edb9a18758f7d97f5f53cdb2f4b9068786a00967c25e2d5fc9f6363a63",
+          "url": "https://github.com/y1-community/rondo-mirror/releases/download/v3.1.0/rom-windows-legacy.zip",
+          "fallback_url": "https://github.com/ryan-specter/rondo-mirror/releases/download/v3.1.0/rom-windows-legacy.zip"
+        },
+        {
+          "name": "rom-linux.zip",
+          "source_asset": "rom.zip",
+          "platform": "linux",
+          "model": "Y1",
+          "type": "Type A",
+          "size": 828360939,
+          "sha256": "6fe1d119a219bc34cbba82fed3b9f48f111b48615bcbf3cb0a2e260cb1484937",
+          "url": "https://github.com/y1-community/rondo-mirror/releases/download/v3.1.0/rom-linux.zip",
+          "fallback_url": "https://github.com/ryan-specter/rondo-mirror/releases/download/v3.1.0/rom-linux.zip"
+        },
+        {
+          "name": "rom-linux-arm64.zip",
+          "source_asset": "rom.zip",
+          "platform": "linux-arm64",
+          "model": "Y1",
+          "type": "Type A",
+          "size": 653265173,
+          "sha256": "22a2a445ffea921cd4621ea588cad8294c84d45546776f599edf511c25b377f6",
+          "url": "https://github.com/y1-community/rondo-mirror/releases/download/v3.1.0/rom-linux-arm64.zip",
+          "fallback_url": "https://github.com/ryan-specter/rondo-mirror/releases/download/v3.1.0/rom-linux-arm64.zip"
+        },
+        {
+          "name": "rom-linux-legacy.zip",
+          "source_asset": "rom.zip",
+          "platform": "linux-legacy",
+          "model": "Y1",
+          "type": "Type A",
+          "size": 531706765,
+          "sha256": "054a5f321edf1fb9b8313b69dcffb1f24313bb2324d41cfd39a3660e2e572a6d",
+          "url": "https://github.com/y1-community/rondo-mirror/releases/download/v3.1.0/rom-linux-legacy.zip",
+          "fallback_url": "https://github.com/ryan-specter/rondo-mirror/releases/download/v3.1.0/rom-linux-legacy.zip"
+        },
+        {
+          "name": "rom-macos.zip",
+          "source_asset": "rom.zip",
+          "platform": "macos",
+          "model": "Y1",
+          "type": "Type A",
+          "size": 579968937,
+          "sha256": "cdd1429a188852e5e3b19ae393d336e29bdfe32b0c8e155e02b67dd097a64b92",
+          "url": "https://github.com/y1-community/rondo-mirror/releases/download/v3.1.0/rom-macos.zip",
+          "fallback_url": "https://github.com/ryan-specter/rondo-mirror/releases/download/v3.1.0/rom-macos.zip"
+        }
+      ],
+      "original_assets": [
+        "rom.zip",
+        "rondo-3.1.0.rondo",
+        "updater.png"
+      ],
+      "stats_url": "https://github.com/y1-community/rondo-mirror/releases/download/v3.1.0/stats.txt"
+    },
     {
       "tag": "v3.0.5",
       "title": "Portable Flashing Package: Rondo 3.0.5",
