@@ -153,9 +153,9 @@ describe("the WhatsApp store", () => {
     const s = open();
     s.mapLid("99999@lid", ALI);
     expect(s.pnOf("99999@lid")).toBe(ALI);
-    s.upsertContact({ jid: ALI, name: "Ali Aliyev" });
+    s.upsertContact({ jid: ALI, name: "Ali Morgan" });
     s.upsertContact({ jid: ALI, notify: "Ali" });
-    expect(s.contact(ALI)).toMatchObject({ name: "Ali Aliyev", notify: "Ali" });
+    expect(s.contact(ALI)).toMatchObject({ name: "Ali Morgan", notify: "Ali" });
     s.wipe();
     expect(s.contacts()).toEqual([]);
   });
@@ -177,5 +177,14 @@ describe("the WhatsApp store", () => {
     s.setStatus("1@s.whatsapp.net", "M1", 3);
     expect(s.chats(before).map((c) => c.jid)).toEqual(["1@s.whatsapp.net"]);
     expect(s.message("1@s.whatsapp.net", "M1")?.status).toBe(3);
+  });
+
+  it("keeps no reaction whose sender is unknown", () => {
+    const s = new WaStore(":memory:");
+    s.upsertChat("1@s.whatsapp.net", { at: 1 });
+    s.putMessage({ chat: "1@s.whatsapp.net", id: "M1", fromMe: true, sender: "me", senderName: "", at: 1, kind: "text", text: "hi", status: 2 });
+    s.apply({ kind: "react", chat: "1@s.whatsapp.net", target: "M1", sender: "1@s.whatsapp.net", emoji: "\u2764\ufe0f" });
+    s.apply({ kind: "react", chat: "1@s.whatsapp.net", target: "M1", sender: "", emoji: "\u2764\ufe0f" });
+    expect(Object.keys(s.message("1@s.whatsapp.net", "M1")!.reactions)).toEqual(["1@s.whatsapp.net"]);
   });
 });

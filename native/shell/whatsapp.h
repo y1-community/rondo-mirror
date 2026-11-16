@@ -1,6 +1,6 @@
 // WhatsApp on the Y1, through the Rondo server (server/src/whatsapp.ts, the /wa/ routes): the server is
 // one of the owner's WhatsApp linked devices; the Y1 reads and sends through it. No notifications:
-// what came is seen when WhatsApp is opened (Emin's decisions, Nov 15).
+// what came is seen when WhatsApp is opened (decided Nov 15).
 //
 // WaClient keeps what the screens show: the chats, each opened chat's messages, the contacts. While a
 // WhatsApp screen is open it follows the server's changes (a long poll of /wa/updates). A copy is kept
@@ -52,6 +52,7 @@ struct WaMessage {
   // on the Y1 only: being sent (an id of our own until the server answers), or not sent
   bool sending = false, failed = false;
   std::string localFile;  // what was sent from the card (sending again uses it)
+  std::string mine;       // my own reaction ("" none)
   std::string raw;
 };
 struct WaContact {
@@ -89,6 +90,8 @@ class WaClient {
   void sendVoice(const std::string& jid, const std::string& wav, int seconds);
   void sendMedia(const std::string& jid, const std::string& file, bool video);
   void retry(const std::string& jid, const std::string& id);  // a message that wasn't sent
+  // my reaction to a message: an emoji, or "" to take it back (shown at once, undone if it didn't go)
+  void react(const std::string& jid, const std::string& id, const std::string& emoji);
   // the contacts (loaded once a session), and one's profile with "about"
   void loadContacts(std::function<void()> done);
   const std::vector<WaContact>& contacts() const { return contacts_; }

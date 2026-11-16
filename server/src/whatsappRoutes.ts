@@ -73,6 +73,17 @@ export function registerWhatsAppRoutes(app: FastifyInstance, wa: WhatsApp): void
     });
   });
 
+  // a reaction from the Rondo (server 3.4.0): any emoji, "" to take it back
+  app.post<{ Params: { jid: string }; Body: { id?: string; emoji?: string } }>("/wa/chats/:jid/react", async (req, reply) => {
+    const jid = req.params.jid, id = String(req.body?.id ?? ""), emoji = String(req.body?.emoji ?? "");
+    if (!JID.test(jid) || !ID.test(id)) return bad(reply, "id");
+    if ([...emoji].length > 12) return bad(reply, "emoji");
+    return sent(reply, async () => {
+      const m = await wa.react(jid, id, emoji);
+      return m ? wa.messageJson(m) : undefined;
+    });
+  });
+
   app.post<{ Params: { jid: string } }>("/wa/chats/:jid/voice", { bodyLimit: BODY_LIMIT }, async (req, reply) => {
     const jid = req.params.jid;
     if (!JID.test(jid)) return bad(reply, "jid");
@@ -143,7 +154,7 @@ export function registerWhatsAppRoutes(app: FastifyInstance, wa: WhatsApp): void
       .contacts()
       .filter((c) => c.jid.endsWith("@s.whatsapp.net") && (c.name || c.notify))
       .map((c) => wa.contactJson(c.jid) as { name: string; saved: boolean });
-    // as the phone lists them: names that start with a letter first, then the rest ("+994…", "@name"), A to Z
+    // as the phone lists them: names that start with a letter first, then the rest ("+1 555…", "@name"), A to Z
     const letter = (s: string) => Number(/^\p{L}/u.test(s.replace(/^~/, "")));
     all.sort((a, b) => Number(b.saved) - Number(a.saved) || letter(b.name) - letter(a.name) || a.name.localeCompare(b.name));
     return { contacts: all };
