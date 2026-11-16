@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "generated_at": "2026-11-15T17:12:52Z",
+  "generated_at": "2026-11-16T09:42:48Z",
   "source_repo": "jarvissax/rondo",
   "source_fallback_repo": "",
   "mirror_repo": "y1-community/rondo-mirror",
@@ -67,6 +67,90 @@
     }
   ],
   "releases": [
+    {
+      "tag": "v3.0.5",
+      "title": "Portable Flashing Package: Rondo 3.0.5",
+      "source_title": "Rondo 3.0.5",
+      "source_url": "https://github.com/jarvissax/rondo/releases/tag/v3.0.5",
+      "source_fallback_url": "",
+      "published_at": "2026-11-16T07:39:10Z",
+      "prerelease": false,
+      "source_notes": "An update for the 3.0 firmware: Settings \u203a System \u203a Software update, the dashboard or the\n[update page](https://jarvissax.github.io/rondo/). It works with Rondo server 3.1.0 or newer, as\n3.0.4 does; WhatsApp needs your server at 3.3.0, and reacting at 3.4.0. A Rondo still on 3.0.3 gets [3.0.4](https://github.com/jarvissax/rondo/releases/tag/v3.0.4)'s\nchanges with it too (WhatsApp, Settings \u203a Server, colored tiles): the update page didn't offer 3.0.4.\n\n### New\n\n- **React to WhatsApp messages:** **React** on a message's menu shows \ud83d\udc4d \u2764\ufe0f \ud83d\ude02 \ud83d\ude2e \ud83d\ude22 \ud83d\ude4f \ud83d\udd25 \ud83d\udc4f first,\n  then every emoji of the keyboard. Center on one reacts with it; **Take back** (or your own emoji\n  again) takes it back.\n- **Emoji in your WhatsApp messages:** the keyboard's \ud83d\ude0a key opens four pages of emoji (faces, hands\n  and hearts, things); \u2039 and \u203a turn them, and **Del** takes off a whole emoji.\n- **Search in WhatsApp:** **Search** on top of the chats finds chats and contacts by name (any case,\n  with or without accents) or by three or more digits of a number; **New chat** has a Search of its\n  own for your contacts. Messages aren't searched.\n\n### Fixed\n\n- A WhatsApp reaction showed as two; with Rondo server 3.4.0 each person counts once.\n\n",
+      "assets": [
+        {
+          "name": "rom-windows.zip",
+          "source_asset": "rom.zip",
+          "platform": "windows",
+          "model": "Y1",
+          "type": "Type A",
+          "size": 771539750,
+          "sha256": "cf77fd6be3f6f123804f03d804f6b29af41c5684b96b920c2b83d8ee213e267a",
+          "url": "https://github.com/y1-community/rondo-mirror/releases/download/v3.0.5/rom-windows.zip",
+          "fallback_url": "https://github.com/ryan-specter/rondo-mirror/releases/download/v3.0.5/rom-windows.zip"
+        },
+        {
+          "name": "rom-windows-legacy.zip",
+          "source_asset": "rom.zip",
+          "platform": "windows-legacy",
+          "model": "Y1",
+          "type": "Type A",
+          "size": 533300897,
+          "sha256": "80cbc65bae753a40d59b22f78954000d1f2e742d109fe9b82a6897155a5ea177",
+          "url": "https://github.com/y1-community/rondo-mirror/releases/download/v3.0.5/rom-windows-legacy.zip",
+          "fallback_url": "https://github.com/ryan-specter/rondo-mirror/releases/download/v3.0.5/rom-windows-legacy.zip"
+        },
+        {
+          "name": "rom-linux.zip",
+          "source_asset": "rom.zip",
+          "platform": "linux",
+          "model": "Y1",
+          "type": "Type A",
+          "size": 828369354,
+          "sha256": "617d8e4916571cc2927ced22b964fd5ef0c537e7bd246fb0c863360835f57dac",
+          "url": "https://github.com/y1-community/rondo-mirror/releases/download/v3.0.5/rom-linux.zip",
+          "fallback_url": "https://github.com/ryan-specter/rondo-mirror/releases/download/v3.0.5/rom-linux.zip"
+        },
+        {
+          "name": "rom-linux-arm64.zip",
+          "source_asset": "rom.zip",
+          "platform": "linux-arm64",
+          "model": "Y1",
+          "type": "Type A",
+          "size": 653273588,
+          "sha256": "6a49689dfad17e146f6c3c76d6be87ffc06ed5c05dfaac852313758d985dd063",
+          "url": "https://github.com/y1-community/rondo-mirror/releases/download/v3.0.5/rom-linux-arm64.zip",
+          "fallback_url": "https://github.com/ryan-specter/rondo-mirror/releases/download/v3.0.5/rom-linux-arm64.zip"
+        },
+        {
+          "name": "rom-linux-legacy.zip",
+          "source_asset": "rom.zip",
+          "platform": "linux-legacy",
+          "model": "Y1",
+          "type": "Type A",
+          "size": 531715182,
+          "sha256": "3aa313dc724d21131799c5c6e865d6b535f5cae10d737e676ef197e496449f04",
+          "url": "https://github.com/y1-community/rondo-mirror/releases/download/v3.0.5/rom-linux-legacy.zip",
+          "fallback_url": "https://github.com/ryan-specter/rondo-mirror/releases/download/v3.0.5/rom-linux-legacy.zip"
+        },
+        {
+          "name": "rom-macos.zip",
+          "source_asset": "rom.zip",
+          "platform": "macos",
+          "model": "Y1",
+          "type": "Type A",
+          "size": 579977352,
+          "sha256": "b7dbf740474c5d63f8f5b6c1bcbf9a6f029d5925da5931c839b739390452f0c3",
+          "url": "https://github.com/y1-community/rondo-mirror/releases/download/v3.0.5/rom-macos.zip",
+          "fallback_url": "https://github.com/ryan-specter/rondo-mirror/releases/download/v3.0.5/rom-macos.zip"
+        }
+      ],
+      "original_assets": [
+        "rom.zip",
+        "rondo-3.0.5.rondo",
+        "updater.png"
+      ],
+      "stats_url": "https://github.com/y1-community/rondo-mirror/releases/download/v3.0.5/stats.txt"
+    },
     {
       "tag": "v3.0.4",
       "title": "Portable Flashing Package: Rondo 3.0.4",
