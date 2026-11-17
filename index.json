@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "generated_at": "2026-11-16T13:02:20Z",
+  "generated_at": "2026-11-17T13:27:50Z",
   "source_repo": "jarvissax/rondo",
   "source_fallback_repo": "",
   "mirror_repo": "y1-community/rondo-mirror",
@@ -67,6 +67,90 @@
     }
   ],
   "releases": [
+    {
+      "tag": "v4.0.0",
+      "title": "Portable Flashing Package: Rondo 4.0.0",
+      "source_title": "Rondo 4.0.0",
+      "source_url": "https://github.com/jarvissax/rondo/releases/tag/v4.0.0",
+      "source_fallback_url": "",
+      "published_at": "2026-11-17T12:38:31Z",
+      "prerelease": false,
+      "source_notes": "For the **Y1, Type A**. A new firmware (number 4): **install it with Innioasis Updater CE**, with **Keep my settings** so your settings, Wi-Fi networks, server connection and paired headphones stay. Software update on 3.x shows 4.0.0 but can't install it. Works with Rondo server 3.1.0 or newer.\n\n### Battery\n\n- **Music with the screen off after charging from a computer:** after every unplug from a computer\n  except the first since the Y1 started, part of its USB controller stayed powered, and that kept the\n  chip out of its deepest rest between the moments music needs it: roughly 25-50 mA more for as long\n  as the Y1 ran. The new firmware turns it off after every unplug.\n- **The processor with the screen off** ran at its top speed the whole time. It now slows down when\n  there's little to do, as it does with the screen on; playing music takes little: about 6-15 mA less\n  while you listen.\n- **Wi-Fi away from home:** with the screen off, it looks for a network you know every minute instead\n  of every 15 seconds, and at once when the screen comes on.\n- **Video quality:** Auto and 360p say \"saves battery\" (Settings \u203a YouTube \u203a Video quality, and the\n  player's options). Auto is still 360p: a widescreen video fills 480 by 270 of the screen, and 720p\n  keeps both of the processor's cores busy.\n\n",
+      "assets": [
+        {
+          "name": "rom-windows.zip",
+          "source_asset": "rom.zip",
+          "platform": "windows",
+          "model": "Y1",
+          "type": "Type A",
+          "size": 771539420,
+          "sha256": "a3313dabd6b56fb7d706a65060516db452a9067c477540cb48ae92251bbf9be0",
+          "url": "https://github.com/y1-community/rondo-mirror/releases/download/v4.0.0/rom-windows.zip",
+          "fallback_url": "https://github.com/ryan-specter/rondo-mirror/releases/download/v4.0.0/rom-windows.zip"
+        },
+        {
+          "name": "rom-windows-legacy.zip",
+          "source_asset": "rom.zip",
+          "platform": "windows-legacy",
+          "model": "Y1",
+          "type": "Type A",
+          "size": 533300567,
+          "sha256": "bef5e24a1e7e6c106f103a546d476d2218df10c94271b8d09d36e5f6f373ae1e",
+          "url": "https://github.com/y1-community/rondo-mirror/releases/download/v4.0.0/rom-windows-legacy.zip",
+          "fallback_url": "https://github.com/ryan-specter/rondo-mirror/releases/download/v4.0.0/rom-windows-legacy.zip"
+        },
+        {
+          "name": "rom-linux.zip",
+          "source_asset": "rom.zip",
+          "platform": "linux",
+          "model": "Y1",
+          "type": "Type A",
+          "size": 828369024,
+          "sha256": "0b3b80a48908db04ec08856521a846be5ac894b62d1fed76ea62165d16ce3f27",
+          "url": "https://github.com/y1-community/rondo-mirror/releases/download/v4.0.0/rom-linux.zip",
+          "fallback_url": "https://github.com/ryan-specter/rondo-mirror/releases/download/v4.0.0/rom-linux.zip"
+        },
+        {
+          "name": "rom-linux-arm64.zip",
+          "source_asset": "rom.zip",
+          "platform": "linux-arm64",
+          "model": "Y1",
+          "type": "Type A",
+          "size": 653273258,
+          "sha256": "e4360ce35a6b4f8e2723087b036ba05ff9a51218b86faa154c23d9d3979ba6b8",
+          "url": "https://github.com/y1-community/rondo-mirror/releases/download/v4.0.0/rom-linux-arm64.zip",
+          "fallback_url": "https://github.com/ryan-specter/rondo-mirror/releases/download/v4.0.0/rom-linux-arm64.zip"
+        },
+        {
+          "name": "rom-linux-legacy.zip",
+          "source_asset": "rom.zip",
+          "platform": "linux-legacy",
+          "model": "Y1",
+          "type": "Type A",
+          "size": 531714852,
+          "sha256": "1807a83644ec3654f0aca2069f69dcb91d5ddfb8ffa4606e14e0a86dc74f851a",
+          "url": "https://github.com/y1-community/rondo-mirror/releases/download/v4.0.0/rom-linux-legacy.zip",
+          "fallback_url": "https://github.com/ryan-specter/rondo-mirror/releases/download/v4.0.0/rom-linux-legacy.zip"
+        },
+        {
+          "name": "rom-macos.zip",
+          "source_asset": "rom.zip",
+          "platform": "macos",
+          "model": "Y1",
+          "type": "Type A",
+          "size": 579977022,
+          "sha256": "6cb663fac93f008598cfdd0ca0bbb8925916bb60aca8f6f1832ced2d4944822a",
+          "url": "https://github.com/y1-community/rondo-mirror/releases/download/v4.0.0/rom-macos.zip",
+          "fallback_url": "https://github.com/ryan-specter/rondo-mirror/releases/download/v4.0.0/rom-macos.zip"
+        }
+      ],
+      "original_assets": [
+        "rom.zip",
+        "rondo-4.0.0.rondo",
+        "updater.png"
+      ],
+      "stats_url": "https://github.com/y1-community/rondo-mirror/releases/download/v4.0.0/stats.txt"
+    },
     {
       "tag": "v3.1.2",
       "title": "Portable Flashing Package: Rondo 3.1.2",
