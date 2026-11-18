@@ -91,7 +91,7 @@ void seek(bool up) {
 }
 void startRadio() {
   if (g_player.state().playing) g_player.pause();
-  g_player.fmStart(g_config.radio.frequency, g_prefs.fmVolume, g_config.radio.speaker);
+  g_player.fmStart(g_config.radio.frequency, g_prefs.fmVolume, g_config.radio.speaker, g_prefs.fmSpeakerVolume);
 }
 void saveRadio() {
   g_radioDirtyAt = 0;
@@ -320,6 +320,9 @@ class FmOptionsScreen : public RadioList {
     Row output;
     output.title = "Output";
     output.trailing = g_config.radio.speaker ? "Speaker" : "Headphones";
+    // the Y1's speaker is fed from the headphone amplifier, and the headphones stay in as the
+    // antenna: they play too, at the speaker's level (MediaTek's HAL opens both, Nov 18)
+    if (g_config.radio.speaker) output.subtitle = "Headphones play too";
     output.onSelect = [this] {
       g_config.radio.speaker = !g_config.radio.speaker;
       saveRadio();
@@ -571,10 +574,10 @@ void fmTick() {
     g_config.radio.names[s.fmFrequency] = s.fmName;
     saveRadio();
   }
-  if (s.fmVolume >= 0 && s.fmVolume != g_prefs.fmVolume) {
-    g_prefs.fmVolume = s.fmVolume;
-    savePrefsNow();
-  }
+  bool volumes = false;  // the radio's own steps (headphones, speaker), as the player has them
+  if (s.fmVolume >= 0 && s.fmVolume != g_prefs.fmVolume) g_prefs.fmVolume = s.fmVolume, volumes = true;
+  if (s.fmSpeakerVolume >= 0 && s.fmSpeakerVolume != g_prefs.fmSpeakerVolume) g_prefs.fmSpeakerVolume = s.fmSpeakerVolume, volumes = true;
+  if (volumes) savePrefsNow();
   if (g_radioDirtyAt && g_app->now() - g_radioDirtyAt > 1000 * kMs) saveRadio();
 }
 

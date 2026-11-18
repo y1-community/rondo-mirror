@@ -22,6 +22,27 @@ going dark by itself, a press wakes it and does what it does (after Power, a pre
 wakes it). A **wired headset's buttons** (play/pause, next, previous, volume) work with the screen
 on or off, like Bluetooth headphones' buttons.
 
+### The keyboard
+
+Wherever you type (a search, a message, a playlist's name), the keyboard works like a TV remote:
+the wheel walks the keys, Next and Previous move right and left, Play moves down, Menu moves up
+(on the top row it closes the keyboard) and center types. **ABC** and **#+=** switch to capitals
+and symbols. It takes the look of where it opens: YouTube's and YouTube Music's round keys,
+WhatsApp's greens, Rondo's own everywhere else.
+
+The **😊** key (on every keyboard but a Wi-Fi password's and the server's address, code and token)
+opens the emoji: every emoji your Y1's font draws, in ten tabs along the top, **Recent** (your
+last 30) and then smileys, people, animals, food, travel, activities, objects, symbols and flags.
+
+- The wheel goes through the whole list, a fast spin a row at a time; **hold Next or Previous** to
+  jump to the next or previous tab. Menu on the top row goes up to the tabs, where the wheel picks
+  a tab; Menu there goes back to the letters.
+- The line under the keyboard names the emoji you're on.
+- **Tone** sets the skin tone for every emoji that has one (center: the next tone).
+- **🔍** finds an emoji by its name: type part of it (heart, cat, flag, fruit) and what matches is
+  the row on top; Menu goes up to it.
+- **Del** takes off a whole emoji.
+
 ## Main menu
 
 **Now Playing**, **Library**, **YouTube**, **YouTube Music**, **WhatsApp**, **FM Radio** and
@@ -65,7 +86,10 @@ Recently played, Top rated) and **The card** (Rescan, Organize). Every list of s
 - **Playlists:** **New playlist**, then **Add songs** (or hold center on any song and choose
   **Add to playlist**). Hold center on a song in a playlist to move it or take it out, and on a
   playlist to rename or delete it. Playlists are `.m3u8` files in the card's `Playlists` folder,
-  so music players on a computer open them too. **Smart playlists**, made on the
+  so music players on a computer open them too. Downloaded YouTube Music playlists are with them
+  (in `Playlists/YouTube Music`), marked YouTube Music and with their cover. A picture beside a
+  playlist with its name (`Road trip.jpg` beside `Road trip.m3u8`) is its artwork; Photos leaves the
+  `Playlists` folder out. **Smart playlists**, made on the
   [dashboard](dashboard.md#library) from rules (a genre, a year, what you play and rate), are listed
   below them and pick their songs anew each time you open one.
 - **Hold center on a song** to play it now, play it next, add it to the queue or a playlist, or
@@ -122,21 +146,38 @@ with the wheel.
   the server's own account counts. YouTube Music's own home and history also need a cookies.txt (on
   the dashboard's YouTube page, or the server's admin page).
 - **Hold center on a song** to play it now or next, add it to the queue, **Start radio** (songs
-  like this one) or **Download** it. An album or a playlist has **Download all** at its top.
+  like this one) or **Download** it. Now Playing's options (hold center) have **Download** too, for
+  the song playing. An album has **Download all** at its top.
+- **A playlist** has **Download playlist** at its top: all its songs (a mix, which never ends:
+  the ones it shows when you open it), and a playlist of them in Library › Playlists, in the order
+  YouTube has, under its name and marked YouTube Music, with its cover (YouTube's picture of it).
+  It's a file in the card's `Playlists/YouTube Music` folder, its cover a `.jpg` beside it, and has
+  the songs on the card so far, so it plays from the first one. A song you have already is the same file, whatever playlists it's in. **Update
+  download** (there, or holding center on it in Library) gets its new songs and takes YouTube's
+  order; a song taken off it on YouTube leaves the playlist but stays on the card. Library plays,
+  shuffles and deletes it, and doesn't edit it: deleting it asks whether its songs go too (not
+  those another downloaded playlist has, or that you downloaded by themselves).
 - **Downloaded songs** are saved to the card the way the library keeps music, in
   `Music/YouTube Music/Artist/Album (Year)/01 - Title.m4a`: YouTube's own AAC (nothing re-encoded),
   with the song's artist, album, year, track number, cover and lyrics (timed where LRCLIB has them)
-  in its tags. **YouTube Music › Home › Downloads** lists them, also with no connection: center
-  plays them from the card, hold center deletes one, and one on its way can be canceled there.
-  Library › Music has them too, and Organize leaves the folder as it is.
+  in its tags. **YouTube Music › Home › Downloads** lists the downloaded playlists, the songs on
+  their way and those on the card, also with no connection: center plays a song from the card,
+  hold center deletes one (from the playlists it's in too). Library › Music has them too, and
+  Organize leaves the folder as it is.
+- **Pause and resume:** **Pause downloads** at the top of Downloads pauses them all (videos and
+  songs: they're one queue, one at a time), and center on one pauses, resumes or cancels it. A
+  paused one keeps what it has and goes on from there, after a restart too: the queue is kept on
+  the Y1, and what came is saved on the card as it comes. They wait by themselves, and go on when
+  they can, while Wi-Fi is off, while the card is the computer's (USB drive) and when the card is
+  full; the rows say why.
 - Songs stream as YouTube's Opus, or its AAC where a song has no Opus; Now Playing says which
   ("Streaming · Opus").
 - Videos play at the quality set in **Settings › YouTube › Video quality** (Auto picks up to
   360p, the screen's size; up to 720p works). A video without that height plays the next one down.
 - **Hold center on a video** to download it to the card (720p, 480p or 360p) with its subtitles, to
   watch with no connection. **YouTube › Home › Downloads** lists them (also with no connection):
-  center plays one, hold center deletes it, and one on its way can be canceled there. They're saved
-  in `Videos/YouTube` on the card, so Library › Videos has them too.
+  center plays one, hold center deletes it, and one on its way can be paused, resumed or canceled
+  there. They're saved in `Videos/YouTube` on the card, so Library › Videos has them too.
 
 <p align="center"><img src="images/downloads.png" width="360" alt="YouTube › Home › Downloads: the videos saved on the card"></p>
 
@@ -177,15 +218,17 @@ server's admin page: **WhatsApp › Get a code**, and type the code on your phon
   them are three buttons: **Message**, **Voice** and **Photo**.
 - **Center on a message** opens what it holds: a photo full screen, a video in the player, a voice
   message played (the music pauses and comes back after; center again stops it). On a text, or
-  holding center on any message: **React**, **Reply**, open or play it, the sender's profile (in a
-  group) and the chat's profile. A message that couldn't be sent says so: center sends it again.
-- **React** shows 👍 ❤️ 😂 😮 😢 🙏 🔥 👏 first, then every emoji of the keyboard: center on one
-  reacts with it (in place of your earlier one). Once you've reacted, **Take back** sits on top,
-  and center on your own emoji takes it back too.
-- **Message** opens the keyboard: letters, digits, symbols and emoji. The 😊 key opens four pages of
-  faces, hands and hearts, and things (‹ and › turn them, **abc** goes back to letters), and
-  **Del** takes off a whole emoji. What you typed and didn't send is still there next time.
-  **Send** sends it; from a message's **Reply**, it goes as a reply.
+  holding center on any message: the reactions on top, then **Reply**, open or play it, the
+  sender's profile (in a group) and the chat's profile. A message that couldn't be sent says so:
+  center sends it again.
+- **Reacting:** the top row is WhatsApp's 👍 ❤️ 😂 😮 😢 🙏 and **+**. The wheel goes along it and
+  then down the menu (Play jumps between them); center reacts, in place of your earlier one. Yours
+  has a gray circle, and center on it takes it back. **+** slides up every emoji, as the keyboard
+  has them (Recent first, the tabs, Tone, Find): center on one reacts with it, Menu on the tabs
+  closes it. Once you've reacted, **Take back** is there too.
+- **Message** opens the keyboard (see [The keyboard](#the-keyboard)), in WhatsApp's colors. What you
+  typed and didn't send is still there next time. **Send** (the paper plane) sends it; from a
+  message's **Reply**, it goes as a reply.
 - **Voice** records with the Y1's built-in microphone at once (what's playing pauses): center
   sends it, Menu throws it away. Up to 15 minutes.
 - **Photo** lists the photos and videos on the card, the newest first: center shows the one you
@@ -246,7 +289,8 @@ Plug in **wired headphones** first: their cable is the antenna.
 - **Next / Previous:** find the next station up or down.
 - **Play/Pause:** mute.
 - **Hold center** for options: your saved stations, **Scan** (finds every station, about 20
-  seconds), save or remove this one, play through the **speaker**, and the **region**. "Most of
+  seconds), save or remove this one, play through the **speaker** (the headphones play too: the
+  Y1's speaker is fed from their amplifier, and they stay in as the antenna), and the **region**. "Most of
   the world" is 87.5–108 MHz; Japan is 76–95 MHz. In the stations list, hold center on a saved
   station to rename, move or remove it, or on a found one to save it.
 
@@ -328,7 +372,8 @@ Rondo, this repository or its releases: each Mac makes its own.
 
 Rondo takes `emoji.ttf` in its data folder over its own emoji, draws them at the same size and in the
 same place, and keeps it through updates. To go back: `adb shell rm /data/rondo/emoji.ttf` and restart.
-About a hundred emoji of people facing right don't draw with it.
+About a hundred emoji of people facing right don't draw with it, and the newest emoji only come with
+a newer macOS: the keyboard offers only the emoji the font draws.
 
 ## The dashboard
 

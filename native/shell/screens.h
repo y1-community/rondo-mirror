@@ -79,6 +79,13 @@ void openSongMenu(const Item& song);
 // YouTube Music › Downloads (music_screens.cpp), and Home's row for it
 std::unique_ptr<Screen> makeMusicDownloads();
 Row musicDownloadsRow();
+// YouTube Music's and YouTube's Downloads (music_screens.cpp): Pause downloads / Resume downloads (all of
+// them: one queue), what a row on its way says (what: "720p", "" none), and its menu (pause, resume,
+// cancel, try again)
+struct DownloadJob;  // downloads.h
+Row downloadsPauseRow();
+std::string downloadRowState(const DownloadJob& j, const std::string& what);
+void openDownloadMenu(const DownloadJob& j);
 std::string largeThumb(const std::string& thumb, int size);
 std::string artOf(const std::string& path, int size);
 // Wi-Fi (wifi_screens.cpp): its screen, and what Settings says about it (1.0.x's wifiName())
@@ -199,16 +206,17 @@ std::unique_ptr<Screen> makePlaylistMenu(const std::string& name);
 // the menu of a song on the card; from a playlist, with moving and removing
 std::unique_ptr<Screen> makeSongMenu(const std::string& path, const std::string& playlist = "");
 std::unique_ptr<Screen> makeAddToPlaylist(std::vector<std::string> paths);
-// one line typed on the wheel keyboard: onDone answers "" when it took it, else the problem to show
+// one line typed on the wheel keyboard: onDone answers "" when it took it, else the problem to show.
+// emoji: the 😊 key (not for addresses, codes and tokens)
 std::unique_ptr<Screen> makeTextEntry(std::string title, std::string initial, std::string action, size_t maxLength,
                                       std::function<std::string(const std::string&)> onDone,
-                                      std::function<void(const std::string&)> then);
+                                      std::function<void(const std::string&)> then, bool emoji = true);
 // The full form: a note under the field, how the typed text is shown (a code as 123 456), and an answer
 // that may come later: onDone(text, answer) calls answer("") to take it or answer(problem).
 using TextAnswer = std::function<void(const std::string& text, std::function<void(const std::string& problem)> answer)>;
 std::unique_ptr<Screen> makeTextEntry(std::string title, std::string initial, std::string action, std::string note,
                                       size_t maxLength, std::function<std::string(const std::string&)> shown,
-                                      TextAnswer onDone, std::function<void(const std::string&)> then);
+                                      TextAnswer onDone, std::function<void(const std::string&)> then, bool emoji = true);
 
 // 1.0.x's local Item for a file: its title and "artist · album" (LocalLibrary.item), and the subtitle's
 // first part (the artist) and the rest (the album).

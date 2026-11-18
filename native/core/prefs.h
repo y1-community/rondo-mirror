@@ -14,7 +14,8 @@ struct Prefs {
   bool clickSound = true;         // Settings.System.SOUND_EFFECTS_ENABLED
   bool bluetoothOn = false;       // Settings.Global.BLUETOOTH_ON: Bluetooth comes on with Rondo
   bool wifiOn = true;             // Settings.Global.WIFI_ON: Wi-Fi comes on with Rondo
-  int fmVolume = -1;              // STREAM_FM's step (the radio's own volume); -1: music's, the first time
+  int fmVolume = -1;              // STREAM_FM's step (the radio's own volume) on headphones; -1: music's, the first time
+  int fmSpeakerVolume = -1;       // and on the speaker; -1: the headphones' step, the first time
   // which account feeds the server has (GET /healthz "account", Accounts.kt): without one, YouTube Music
   // has no Library tab and YouTube no Subscriptions or History. Remembered so the tabs don't jump.
   bool accountMusic = true, accountVideos = true;
@@ -27,6 +28,10 @@ struct Prefs {
   bool subtitles = false;
   std::string subLang;
   int subSize = 1, subColor = 0, subOpacity = 100, subBack = 7, subBackOpacity = 75, subEdge = 0;
+  // the keyboard's emoji: the skin tone (0 none, 1-5 light to dark) and the recent ones, most recent first,
+  // separated by spaces (ui/emoji.h)
+  int emojiTone = 0;
+  std::string emojiRecent;
 };
 
 // a language code kept as it can be written (letters, digits, - and _)

@@ -8,6 +8,7 @@
 
 #include "../ui/keyboard.h"
 #include "app.h"
+#include "downloads.h"
 #include "screens.h"
 
 namespace rondo::shell {
@@ -64,8 +65,8 @@ class TextEntryScreen : public Screen {
  public:
   TextEntryScreen(std::string title, std::string initial, std::string action, std::string note, size_t maxLength,
                   std::function<std::string(const std::string&)> shown, TextAnswer onDone,
-                  std::function<void(const std::string&)> then)
-      : title_(std::move(title)), note_(std::move(note)), max_(maxLength), kb_(std::move(action), true),
+                  std::function<void(const std::string&)> then, bool emoji)
+      : title_(std::move(title)), note_(std::move(note)), max_(maxLength), kb_(std::move(action), Keyboard::Style::Shell, emoji),
         shown_(std::move(shown)), onDone_(std::move(onDone)), then_(std::move(then)) {
     kb_.setTyped(std::move(initial));
     line_ = note_;
@@ -74,27 +75,15 @@ class TextEntryScreen : public Screen {
   std::string title() const override { return title_; }
   bool onAction(Action a, int steps) override {
     if (working_) return true;
-    switch (a) {  // TvKeyboard.handle()
-      case Action::Down: kb_.nextKey(); return true;
-      case Action::Up: kb_.prevKey(); return true;
-      case Action::Next:
-      case Action::LongNext: kb_.right(); return true;
-      case Action::Prev:
-      case Action::LongPrev: kb_.left(); return true;
-      case Action::PlayPause: kb_.down(); return true;
-      case Action::Back: return kb_.up();
-      case Action::Select: {
-        Keyboard::Result r = kb_.press();
-        if (r == Keyboard::Result::Action) {
-          finish();
-        } else if (r == Keyboard::Result::Typed) {
-          kb_.keepAtMost(size_t(max_));
-        }
-        if (r == Keyboard::Result::Typed || r == Keyboard::Result::Delete) line_ = note_, problem_ = false;
-        return true;
-      }
-      default: return false;
+    Keyboard::Result r;  // TvKeyboard.handle()
+    if (!keyboardAction(kb_, a, steps, &r)) return false;
+    if (r == Keyboard::Result::Action) {
+      finish();
+    } else if (r == Keyboard::Result::Typed) {
+      kb_.keepAtMost(size_t(max_));
     }
+    if (r == Keyboard::Result::Typed || r == Keyboard::Result::Delete) line_ = note_, problem_ = false;
+    return true;
   }
   bool step(float dt) override { return kb_.step(dt); }
   void draw(Env& e, float w, float h) override {
@@ -115,13 +104,8 @@ class TextEntryScreen : public Screen {
     if (msg.h == 0 || line_.empty()) msg.h = label(e, " ", 10, false).h;
     drawLabel(e, msg, centerText(float(e.dp(8)), w - 2 * e.dp(8), msg.w), sy, problem_ && !working_ ? p.accent : p.muted);
     float area = sy + msg.h + e.dp(3);
-    Label hint = label(e, "wheel: next key \xc2\xb7 center: type \xc2\xb7 Menu up \xc2\xb7 Play down \xc2\xb7 Prev/Next left/right", 9,
-                       false, w);
-    float kh = h - area - (e.dp(3) + hint.h + e.dp(4));
-    e.c.layer(1);
-    kb_.draw(e.c, e.text, p, {float(e.dp(5)), area, w - 2 * e.dp(5), kh}, e.dp(15), e.dp(12));
-    e.c.layer(4);
-    drawLabel(e, hint, centerText(0, w, hint.w), area + kh + e.dp(3), p.muted);
+    drawKeyboard(e, kb_, area, w, h, "wheel: next key \xc2\xb7 center: type \xc2\xb7 Menu up \xc2\xb7 Play down \xc2\xb7 Prev/Next left/right",
+                 p.muted, p.text);
   }
 
  private:
@@ -156,17 +140,17 @@ class TextEntryScreen : public Screen {
 
 std::unique_ptr<Screen> makeTextEntry(std::string title, std::string initial, std::string action, size_t maxLength,
                                       std::function<std::string(const std::string&)> onDone,
-                                      std::function<void(const std::string&)> then) {
+                                      std::function<void(const std::string&)> then, bool emoji) {
   auto now = [onDone](const std::string& text, std::function<void(const std::string&)> answer) { answer(onDone(text)); };
   return std::unique_ptr<Screen>(new TextEntryScreen(std::move(title), std::move(initial), std::move(action), "", maxLength,
-                                                     nullptr, now, std::move(then)));
+                                                     nullptr, now, std::move(then), emoji));
 }
 
 std::unique_ptr<Screen> makeTextEntry(std::string title, std::string initial, std::string action, std::string note,
                                       size_t maxLength, std::function<std::string(const std::string&)> shown,
-                                      TextAnswer onDone, std::function<void(const std::string&)> then) {
+                                      TextAnswer onDone, std::function<void(const std::string&)> then, bool emoji) {
   return std::unique_ptr<Screen>(new TextEntryScreen(std::move(title), std::move(initial), std::move(action), std::move(note),
-                                                     maxLength, std::move(shown), std::move(onDone), std::move(then)));
+                                                     maxLength, std::move(shown), std::move(onDone), std::move(then), emoji));
 }
 
 namespace {
@@ -190,12 +174,14 @@ class AddToPlaylistScreen : public ShellListScreen {
     };
     rows.push_back(add);
     for (const Playlist& p : g_playlists.all()) {
+      if (p.youtube) continue;  // a downloaded one follows YouTube's
       bool has = std::all_of(paths_.begin(), paths_.end(),
                              [&](const std::string& s) { return std::find(p.paths.begin(), p.paths.end(), s) != p.paths.end(); });
       Row r;
       r.title = p.name;
       r.trailing = has ? "Added" : std::to_string(p.paths.size());
-      r.tile = &tiles::playlists;
+      r.tile = p.cover.empty() ? &tiles::playlists : nullptr;
+      r.thumb = p.cover;
       r.enabled = !has;
       std::string name = p.name;
       r.onSelect = [name, paths2] {
@@ -300,10 +286,15 @@ class LocalSongMenuScreen : public RenderedList {
   std::string path_, playlist_, note_;
 };
 
-// PlaylistMenuScreen: rename or delete a playlist.
+// PlaylistMenuScreen: rename or delete a playlist. A downloaded YouTube Music one (downloads.h) isn't
+// renamed or edited here, it follows YouTube's: update it, or delete it with its songs or without.
 class PlaylistMenuScreen : public ShellListScreen {
  public:
-  explicit PlaylistMenuScreen(std::string name) : ShellListScreen(name) {
+  explicit PlaylistMenuScreen(std::string name) : ShellListScreen(Playlist{name, {}, isYouTube(name)}.title()) {
+    if (isYouTube(name)) {
+      youtube(name);
+      return;
+    }
     Row rename;
     rename.title = "Rename";
     rename.chevron = true;
@@ -325,13 +316,63 @@ class PlaylistMenuScreen : public ShellListScreen {
     };
     list_.setRows({rename, del});
   }
+
+ private:
+  static bool isYouTube(const std::string& name) {
+    std::string prefix = std::string(Playlists::kYouTube) + "/";
+    return name.compare(0, prefix.size(), prefix) == 0;
+  }
+  void youtube(const std::string& name) {
+    std::string title = Playlist{name, {}, true}.title(), id = playlistDownloadOf(name);
+    std::vector<Row> rows;
+    if (!id.empty()) {
+      Row up;
+      up.title = "Update download";
+      up.subtitle = "Its new songs come; the order is YouTube's";
+      up.tile = &tiles::downloads;
+      up.onSelect = [id, title] {
+        downloadPlaylist(id, title);
+        g_app->pop();
+      };
+      rows.push_back(up);
+    }
+    Row keep;
+    keep.title = "Delete playlist";
+    keep.subtitle = "Its songs stay on the card";
+    keep.tile = &tiles::del;
+    keep.onSelect = [name, title] {
+      g_app->push(std::unique_ptr<Screen>(new ConfirmScreen("Delete " + quoted(title) + "?", "Its songs stay on the card.", "Delete playlist",
+                                                            [name] {
+                                                              deleteLibraryPlaylist(name, false);
+                                                              g_app->popTo("Playlists");
+                                                            })));
+    };
+    rows.push_back(keep);
+    Row all;
+    all.title = "Delete it and its songs";
+    all.subtitle = "Not those another playlist has, or downloaded by themselves";
+    all.onSelect = [name, title] {
+      g_app->push(std::unique_ptr<Screen>(new ConfirmScreen("Delete " + quoted(title) + " and its songs?",
+                                                            "They're deleted from the card. Can't be undone.", "Delete them", [name] {
+                                                              deleteLibraryPlaylist(name, true);
+                                                              g_app->popTo("Playlists");
+                                                            })));
+    };
+    rows.push_back(all);
+    list_.setRows(std::move(rows));
+  }
 };
 
 // PlaylistScreen: shuffle it, add songs (search), then its songs in order. Hold center on a song to move
 // or remove it.
 class PlaylistScreen : public RenderedList {
  public:
-  explicit PlaylistScreen(std::string name) : RenderedList(name), name_(std::move(name)) { render(); }
+  explicit PlaylistScreen(std::string name) : RenderedList(name), name_(std::move(name)) {
+    std::string prefix = std::string(Playlists::kYouTube) + "/";
+    youtube_ = name_.compare(0, prefix.size(), prefix) == 0;
+    if (youtube_) title_ = name_.substr(prefix.size());
+    render();
+  }
   void onShow() override {
     g_library.rescanIfStale();  // 1.0.x: a playlist opening
     render();
@@ -356,18 +397,21 @@ class PlaylistScreen : public RenderedList {
       playNow(s, 0);
     };
     rows.push_back(shuffle);
-    Row add;
-    add.title = "Add songs";
-    add.tile = &tiles::add;
-    add.chevron = true;
     std::string name = name_;
-    add.onSelect = [name] { g_app->push(makeSearchToAdd(name)); };
-    rows.push_back(add);
+    if (!youtube_) {  // a downloaded one follows YouTube's: not edited here
+      Row add;
+      add.title = "Add songs";
+      add.tile = &tiles::add;
+      add.chevron = true;
+      add.onSelect = [name] { g_app->push(makeSearchToAdd(name)); };
+      rows.push_back(add);
+    }
     Row head;
     head.header = true;
-    head.title = items.empty() ? "No songs yet \xc2\xb7 Add songs, or hold center on any song"
-                               : std::to_string(items.size()) + (items.size() == 1 ? " song" : " songs") +
-                                     " \xc2\xb7 hold center: move or remove";
+    std::string count = std::to_string(items.size()) + (items.size() == 1 ? " song" : " songs");
+    head.title = youtube_       ? (items.empty() ? std::string("No songs on the card yet") : count + " \xc2\xb7 from YouTube Music")
+                 : items.empty() ? "No songs yet \xc2\xb7 Add songs, or hold center on any song"
+                                 : count + " \xc2\xb7 hold center: move or remove";
     rows.push_back(head);
     // one list shared by every row (a copy each was 821 x 821 strings), and each row's text and
     // artwork filled in when it is drawn, as Songs does
@@ -378,7 +422,8 @@ class PlaylistScreen : public RenderedList {
     for (size_t i = 0; i < items.size(); i++) {
       Row& r = rows[size_t(first_) + i];
       r.onSelect = [shared, i] { playNow(*shared, int(i)); };
-      r.onLongSelect = [shared, i, name] { g_app->push(makeSongMenu((*shared)[i], name)); };
+      std::string in = youtube_ ? "" : name;  // a downloaded one's songs aren't moved or taken out here
+      r.onLongSelect = [shared, i, in] { g_app->push(makeSongMenu((*shared)[i], in)); };
     }
     list_.fill = [this, shared](int i, Row& r) {
       if (i < first_ || i >= first_ + count_) return;
@@ -394,7 +439,7 @@ class PlaylistScreen : public RenderedList {
     if (missing > 0) {
       Row m;
       m.title = std::to_string(missing) + (missing == 1 ? " song isn't on the card" : " songs aren't on the card");
-      m.subtitle = "Copy them back, or they're skipped";
+      m.subtitle = youtube_ ? "Update its download to get them again" : "Copy them back, or they're skipped";
       m.enabled = false;
       rows.push_back(m);
     }
@@ -403,6 +448,7 @@ class PlaylistScreen : public RenderedList {
 
  private:
   std::string name_;
+  bool youtube_ = false;  // a downloaded YouTube Music playlist
   int first_ = 0, count_ = 0;  // where the songs' rows are
 };
 
@@ -433,9 +479,11 @@ class PlaylistsScreen : public RenderedList {
     }
     for (const Playlist& p : all) {
       Row r;
-      r.title = p.name;
+      r.title = p.title();
+      if (p.youtube) r.subtitle = "YouTube Music";
       r.trailing = std::to_string(p.paths.size());
-      r.tile = &tiles::playlists;
+      r.tile = p.cover.empty() ? &tiles::playlists : nullptr;  // its picture when it has one (a downloaded one's cover)
+      r.thumb = p.cover;
       r.chevron = true;
       std::string name = p.name;
       r.onSelect = [name] { g_app->push(makePlaylist(name)); };
