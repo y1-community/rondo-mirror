@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "generated_at": "2026-11-20T17:05:25Z",
+  "generated_at": "2026-11-20T20:42:09Z",
   "source_repo": "jarvissax/rondo",
   "source_fallback_repo": "",
   "mirror_repo": "y1-community/rondo-mirror",
@@ -105,8 +105,8 @@
           "platform": "linux",
           "model": "Y1",
           "type": "Type A",
-          "size": 769180554,
-          "sha256": "5077e2bcdc935d686332a50c0927615eb3bef13d0a5d91697bd0d9d632fcaa77",
+          "size": 769124853,
+          "sha256": "cc8e8e62dc1c8c2c6fc45520ff1878a4362066ad346dc9e1737a5945bc888d0e",
           "url": "https://github.com/y1-community/rondo-mirror/releases/download/v4.0.1/rom-linux.zip",
           "fallback_url": "https://github.com/ryan-specter/rondo-mirror/releases/download/v4.0.1/rom-linux.zip"
         },
@@ -116,8 +116,8 @@
           "platform": "linux-arm64",
           "model": "Y1",
           "type": "Type A",
-          "size": 594084557,
-          "sha256": "a80ac114715f2d0b699423fb1df39a2b2cf4b368042b6c26777087167b9f7232",
+          "size": 594029113,
+          "sha256": "b81d0b3537c98c2df139ede165b24bb836b6d0572cae6d8b2e2378b278c15098",
           "url": "https://github.com/y1-community/rondo-mirror/releases/download/v4.0.1/rom-linux-arm64.zip",
           "fallback_url": "https://github.com/ryan-specter/rondo-mirror/releases/download/v4.0.1/rom-linux-arm64.zip"
         },
@@ -138,8 +138,8 @@
           "platform": "macos",
           "model": "Y1",
           "type": "Type A",
-          "size": 621976406,
-          "sha256": "f206be99acce10f0e7ec862b648deae5d7b3ab5957828613d880f0ede1fe04a5",
+          "size": 569295557,
+          "sha256": "8ad8961d26143bfe3e94715cf5ad01481ddb938e268fa376905442baae4c2f40",
           "url": "https://github.com/y1-community/rondo-mirror/releases/download/v4.0.1/rom-macos.zip",
           "fallback_url": "https://github.com/ryan-specter/rondo-mirror/releases/download/v4.0.1/rom-macos.zip"
         }
@@ -189,8 +189,8 @@
           "platform": "linux",
           "model": "Y1",
           "type": "Type A",
-          "size": 769317714,
-          "sha256": "dc14e06aec0abb40fe28f4a56b02b4e6267543f94ba91cc02a1f7d33491386db",
+          "size": 769262013,
+          "sha256": "04dfdd6c357829293db84d6ee8586de4b97a09c7813a12d3d0be6eef42c9dab1",
           "url": "https://github.com/y1-community/rondo-mirror/releases/download/v4.0.0/rom-linux.zip",
           "fallback_url": "https://github.com/ryan-specter/rondo-mirror/releases/download/v4.0.0/rom-linux.zip"
         },
@@ -200,8 +200,8 @@
           "platform": "linux-arm64",
           "model": "Y1",
           "type": "Type A",
-          "size": 594221717,
-          "sha256": "48a7070cedfe23aa149525a82b00c1fd2800cdb9afbe1a5f60024f7f94b020e2",
+          "size": 594166273,
+          "sha256": "6567346b6f9a441efe2d2b75f35894bc8f3937916a80246fbd3edbdb22ae72d4",
           "url": "https://github.com/y1-community/rondo-mirror/releases/download/v4.0.0/rom-linux-arm64.zip",
           "fallback_url": "https://github.com/ryan-specter/rondo-mirror/releases/download/v4.0.0/rom-linux-arm64.zip"
         },
@@ -222,8 +222,8 @@
           "platform": "macos",
           "model": "Y1",
           "type": "Type A",
-          "size": 622113565,
-          "sha256": "6aa45dbd6f4cc7f154801803d0c26dd931b819c5d42e916f7fa2a2946e2d9f78",
+          "size": 569432716,
+          "sha256": "1fbf10127c2d67e2bd01f98410cb214bd5b20f1d7c103ddedb95583890258cb8",
           "url": "https://github.com/y1-community/rondo-mirror/releases/download/v4.0.0/rom-macos.zip",
           "fallback_url": "https://github.com/ryan-specter/rondo-mirror/releases/download/v4.0.0/rom-macos.zip"
         }
@@ -273,8 +273,8 @@
           "platform": "linux",
           "model": "Y1",
           "type": "Type A",
-          "size": 769317207,
-          "sha256": "a6d1b9ce0b384285e46069d0704d1529d9d88efb25974431e966e5b70588768c",
+          "size": 769261506,
+          "sha256": "698e52fe75970af6bbd9f4dad7c2da77f825c99b3e4aeaec75fc6db89ba02e76",
           "url": "https://github.com/y1-community/rondo-mirror/releases/download/v3.1.2/rom-linux.zip",
           "fallback_url": "https://github.com/ryan-specter/rondo-mirror/releases/download/v3.1.2/rom-linux.zip"
         },
@@ -284,8 +284,8 @@
           "platform": "linux-arm64",
           "model": "Y1",
           "type": "Type A",
-          "size": 594221210,
-          "sha256": "7a8d7e00b8cd77c75b40aa6c791ea1061fb0cbc8f766fb4e98502f85a29b0b8f",
+          "size": 594165766,
+          "sha256": "350275c84a57932a57488f06d577915c760620d813b8f90fc278b5acc7af06ec",
           "url": "https://github.com/y1-community/rondo-mirror/releases/download/v3.1.2/rom-linux-arm64.zip",
           "fallback_url": "https://github.com/ryan-specter/rondo-mirror/releases/download/v3.1.2/rom-linux-arm64.zip"
         },
@@ -306,8 +306,8 @@
           "platform": "macos",
           "model": "Y1",
           "type": "Type A",
-          "size": 622113058,
-          "sha256": "43eee9f13e2b7c47ac399c6a5770826e4d96fbe5311562b04ea9246ec521ecf8",
+          "size": 569432209,
+          "sha256": "63b329bc6e0d352eb582a15d40066019c3c644f827697639ce7fa5bb992e99a9",
           "url": "https://github.com/y1-community/rondo-mirror/releases/download/v3.1.2/rom-macos.zip",
           "fallback_url": "https://github.com/ryan-specter/rondo-mirror/releases/download/v3.1.2/rom-macos.zip"
         }
@@ -357,8 +357,8 @@
           "platform": "linux",
           "model": "Y1",
           "type": "Type A",
-          "size": 769310759,
-          "sha256": "f84fdd09f533e497c3d6451c89cafe81ed749ef2f4b712b8ceac8bb2246bde30",
+          "size": 769255058,
+          "sha256": "781c92520769fd870adc31a7c297f8cad59a25a9374251fd8d5ddf9f17a7f4b6",
           "url": "https://github.com/y1-community/rondo-mirror/releases/download/v3.1.1/rom-linux.zip",
           "fallback_url": "https://github.com/ryan-specter/rondo-mirror/releases/download/v3.1.1/rom-linux.zip"
         },
@@ -368,8 +368,8 @@
           "platform": "linux-arm64",
           "model": "Y1",
           "type": "Type A",
-          "size": 594214762,
-          "sha256": "1b9192d622bc272c7ec65f610369f61fa61c499b60d5626727a08a63227fffcf",
+          "size": 594159318,
+          "sha256": "1484b7fec5bb986f7f5c6290a84915174944ce227ab3df3e4a7ecba1994d0bea",
           "url": "https://github.com/y1-community/rondo-mirror/releases/download/v3.1.1/rom-linux-arm64.zip",
           "fallback_url": "https://github.com/ryan-specter/rondo-mirror/releases/download/v3.1.1/rom-linux-arm64.zip"
         },
@@ -390,8 +390,8 @@
           "platform": "macos",
           "model": "Y1",
           "type": "Type A",
-          "size": 622106611,
-          "sha256": "168cc3c6bccf1052ed0e645b6976d39a000c4153d4e68c3ac9617c4cf41b095b",
+          "size": 569425762,
+          "sha256": "17e692be6bcb8bf9ac8c8775cdfa492e02c302c7ebb675eb92286acd808a243b",
           "url": "https://github.com/y1-community/rondo-mirror/releases/download/v3.1.1/rom-macos.zip",
           "fallback_url": "https://github.com/ryan-specter/rondo-mirror/releases/download/v3.1.1/rom-macos.zip"
         }
@@ -441,8 +441,8 @@
           "platform": "linux",
           "model": "Y1",
           "type": "Type A",
-          "size": 769309735,
-          "sha256": "a03f9c6cb69297e13172e8c0e5536741fd7ee05bac6faa2ac2d95a99e51e4011",
+          "size": 769254034,
+          "sha256": "ea2c55738d6f9cc21c6048d1089b5cc3b898fba9d9bc57630f54586410a68d25",
           "url": "https://github.com/y1-community/rondo-mirror/releases/download/v3.1.0/rom-linux.zip",
           "fallback_url": "https://github.com/ryan-specter/rondo-mirror/releases/download/v3.1.0/rom-linux.zip"
         },
@@ -452,8 +452,8 @@
           "platform": "linux-arm64",
           "model": "Y1",
           "type": "Type A",
-          "size": 594213738,
-          "sha256": "8cd6c10ca89cf186677882d52f3c5b3b950e893cbf770da0ab1845a409804fbe",
+          "size": 594158294,
+          "sha256": "51ecce254307df5c83bda2b0cf3886646cd77dca488538e34b855cef8fb4b463",
           "url": "https://github.com/y1-community/rondo-mirror/releases/download/v3.1.0/rom-linux-arm64.zip",
           "fallback_url": "https://github.com/ryan-specter/rondo-mirror/releases/download/v3.1.0/rom-linux-arm64.zip"
         },
@@ -474,8 +474,8 @@
           "platform": "macos",
           "model": "Y1",
           "type": "Type A",
-          "size": 622105586,
-          "sha256": "816ab2b6c252e92c934f3fdcf11ed75468f2c11085bd103438005932185a4f8f",
+          "size": 569424737,
+          "sha256": "3c02905d5f5b1986ca8d7d6e91c2e9aa35894177ddf8a7b4a4a946c36ca0937c",
           "url": "https://github.com/y1-community/rondo-mirror/releases/download/v3.1.0/rom-macos.zip",
           "fallback_url": "https://github.com/ryan-specter/rondo-mirror/releases/download/v3.1.0/rom-macos.zip"
         }
@@ -525,8 +525,8 @@
           "platform": "linux",
           "model": "Y1",
           "type": "Type A",
-          "size": 769318150,
-          "sha256": "a90ac7d91e39c6e822b1ca42d10c45820b720cad5b1832c1b8538ff0454a035c",
+          "size": 769262449,
+          "sha256": "34ae645a422b96e4f4d47cea36a3f83a6bff0a29507326130af45627f0fb13f8",
           "url": "https://github.com/y1-community/rondo-mirror/releases/download/v3.0.5/rom-linux.zip",
           "fallback_url": "https://github.com/ryan-specter/rondo-mirror/releases/download/v3.0.5/rom-linux.zip"
         },
@@ -536,8 +536,8 @@
           "platform": "linux-arm64",
           "model": "Y1",
           "type": "Type A",
-          "size": 594222153,
-          "sha256": "939421b6451b2ea3c33487b1c9eabccb04f8a9930baf439dae04fc35b78ec015",
+          "size": 594166709,
+          "sha256": "f974499c6d5e95f9a0fd47a912142267389aeaeac904724cbf6bccf4269574c5",
           "url": "https://github.com/y1-community/rondo-mirror/releases/download/v3.0.5/rom-linux-arm64.zip",
           "fallback_url": "https://github.com/ryan-specter/rondo-mirror/releases/download/v3.0.5/rom-linux-arm64.zip"
         },
@@ -558,8 +558,8 @@
           "platform": "macos",
           "model": "Y1",
           "type": "Type A",
-          "size": 622114001,
-          "sha256": "20badacc46ea1b6c56dc9d66fc283be16d706d9d29f5de15e3107a74f78edbf8",
+          "size": 569433152,
+          "sha256": "3b7b8564a2023dfd0934774f03b4c9f6f728c42c421ea01bd7e5e0e0c9426b1c",
           "url": "https://github.com/y1-community/rondo-mirror/releases/download/v3.0.5/rom-macos.zip",
           "fallback_url": "https://github.com/ryan-specter/rondo-mirror/releases/download/v3.0.5/rom-macos.zip"
         }
@@ -1197,8 +1197,8 @@
           "platform": "linux",
           "model": "Y1",
           "type": "Type A",
-          "size": 767579828,
-          "sha256": "83374bfd3b94574de4a19653135890a175344e8f11c9a682b7d9141e36dc1da8",
+          "size": 767524127,
+          "sha256": "9aeab27fc4cc8aa7674b48e5f0145dc395be17aabc50f494329e8b2f50bad61a",
           "url": "https://github.com/y1-community/rondo-mirror/releases/download/v1.0.2/rom-linux.zip",
           "fallback_url": "https://github.com/ryan-specter/rondo-mirror/releases/download/v1.0.2/rom-linux.zip"
         },
@@ -1208,8 +1208,8 @@
           "platform": "linux-arm64",
           "model": "Y1",
           "type": "Type A",
-          "size": 592483831,
-          "sha256": "690f091c47bd3c3b27a5849992cf9a7dcf30bdbeb38e327fed21083d47699320",
+          "size": 592428387,
+          "sha256": "54a0fed5377534df8235f2478181f6cd56e371e8fc5070d05b39ce165a841594",
           "url": "https://github.com/y1-community/rondo-mirror/releases/download/v1.0.2/rom-linux-arm64.zip",
           "fallback_url": "https://github.com/ryan-specter/rondo-mirror/releases/download/v1.0.2/rom-linux-arm64.zip"
         },
@@ -1230,8 +1230,8 @@
           "platform": "macos",
           "model": "Y1",
           "type": "Type A",
-          "size": 620375679,
-          "sha256": "889b3f8e04382543005ead12bb0071db6280c8c9299a2bb8a813dfadc7388f6c",
+          "size": 567694830,
+          "sha256": "2cc6d441f4fc58ada3a968ec7597597189c8cc13f4e51b4a7bb781ee9f764c53",
           "url": "https://github.com/y1-community/rondo-mirror/releases/download/v1.0.2/rom-macos.zip",
           "fallback_url": "https://github.com/ryan-specter/rondo-mirror/releases/download/v1.0.2/rom-macos.zip"
         }
@@ -1281,8 +1281,8 @@
           "platform": "linux",
           "model": "Y1",
           "type": "Type A",
-          "size": 767580205,
-          "sha256": "10202a840045ea2083ce5b46c80e890e0e76479899beb66da41b4fa53e7a2867",
+          "size": 767524504,
+          "sha256": "0c4952758ce689970ebb748ee812222506eda8793d01c0f18780f867af0bc12c",
           "url": "https://github.com/y1-community/rondo-mirror/releases/download/v1.0.1/rom-linux.zip",
           "fallback_url": "https://github.com/ryan-specter/rondo-mirror/releases/download/v1.0.1/rom-linux.zip"
         },
@@ -1292,8 +1292,8 @@
           "platform": "linux-arm64",
           "model": "Y1",
           "type": "Type A",
-          "size": 592484208,
-          "sha256": "2a97a157de1dec4864307765d59964a811a1207e2d7258d1b675a52672f87d4b",
+          "size": 592428764,
+          "sha256": "7029243591e6fb878778cb53a27075f8682e5512747a0103b51b61351ccea5c7",
           "url": "https://github.com/y1-community/rondo-mirror/releases/download/v1.0.1/rom-linux-arm64.zip",
           "fallback_url": "https://github.com/ryan-specter/rondo-mirror/releases/download/v1.0.1/rom-linux-arm64.zip"
         },
@@ -1314,8 +1314,8 @@
           "platform": "macos",
           "model": "Y1",
           "type": "Type A",
-          "size": 620376057,
-          "sha256": "d09be5937e6cd9bb064a4056261f25e3aaa3fc781728994e2f2531dfcaf714ba",
+          "size": 567695208,
+          "sha256": "4645e5717ecf19c99b8736523bc828eb58c39db73b18d9af1e616f74210b73b5",
           "url": "https://github.com/y1-community/rondo-mirror/releases/download/v1.0.1/rom-macos.zip",
           "fallback_url": "https://github.com/ryan-specter/rondo-mirror/releases/download/v1.0.1/rom-macos.zip"
         }
@@ -1365,8 +1365,8 @@
           "platform": "linux",
           "model": "Y1",
           "type": "Type A",
-          "size": 767581122,
-          "sha256": "1a1d279b0fd38e5ab2d88265ba983f170b850e0b007f4103c91f8893e3905747",
+          "size": 767525421,
+          "sha256": "9db62549f2a324866e8e3a2eb28d8edb3a81d763b4cfa3f01d3e2367716aa25d",
           "url": "https://github.com/y1-community/rondo-mirror/releases/download/v1.0.0/rom-linux.zip",
           "fallback_url": "https://github.com/ryan-specter/rondo-mirror/releases/download/v1.0.0/rom-linux.zip"
         },
@@ -1376,8 +1376,8 @@
           "platform": "linux-arm64",
           "model": "Y1",
           "type": "Type A",
-          "size": 592485125,
-          "sha256": "fa0e466915c4e5fa7ec3cc373db36f4e843fda14813d670a1c13b5e693b190ef",
+          "size": 592429681,
+          "sha256": "530ffb678afb688ae03124e92ce1061382f65eabb1687184e45955e157a3297b",
           "url": "https://github.com/y1-community/rondo-mirror/releases/download/v1.0.0/rom-linux-arm64.zip",
           "fallback_url": "https://github.com/ryan-specter/rondo-mirror/releases/download/v1.0.0/rom-linux-arm64.zip"
         },
@@ -1398,8 +1398,8 @@
           "platform": "macos",
           "model": "Y1",
           "type": "Type A",
-          "size": 620376973,
-          "sha256": "fe352d6f3dcf05b438bcca343eca367d480b0e2e5bac084ff15acd49b37a41c7",
+          "size": 567696124,
+          "sha256": "b140c850e02547ea889b6ada3bb972b4dd7c65f9270c62dcfab6c4cfdfcb028a",
           "url": "https://github.com/y1-community/rondo-mirror/releases/download/v1.0.0/rom-macos.zip",
           "fallback_url": "https://github.com/ryan-specter/rondo-mirror/releases/download/v1.0.0/rom-macos.zip"
         }
