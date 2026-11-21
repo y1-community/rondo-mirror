@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "generated_at": "2026-11-21T10:09:54Z",
+  "generated_at": "2026-11-21T17:39:36Z",
   "source_repo": "jarvissax/rondo",
   "source_fallback_repo": "",
   "mirror_repo": "y1-community/rondo-mirror",
@@ -67,6 +67,174 @@
     }
   ],
   "releases": [
+    {
+      "tag": "v4.0.3",
+      "title": "Portable Flashing Package: Rondo 4.0.3",
+      "source_title": "Rondo 4.0.3",
+      "source_url": "https://github.com/jarvissax/rondo/releases/tag/v4.0.3",
+      "source_fallback_url": "",
+      "published_at": "2026-11-21T15:06:05Z",
+      "prerelease": false,
+      "source_notes": "An update for the 4.0 firmware: Settings \u203a System \u203a Software update, the dashboard or the\n[update page](https://jarvissax.github.io/rondo/). It works with Rondo server 3.1.0 or newer, as\n4.0.2 does.\n\n### Fixed\n\n- **The Rondo server that kept going \"Unreachable\":** since 4.0.1, once a WhatsApp chat was marked\n  read or a message or reaction was sent, some of the Y1's requests to the server after it went out\n  wrong and the server turned them down. Settings \u203a Server said \"Unreachable\", WhatsApp said the\n  server was too old for it, and YouTube and YouTube Music said \"not found\", on and off. Every\n  request now goes out as it should.\n\n",
+      "assets": [
+        {
+          "name": "rom-windows.zip",
+          "source_asset": "rom.zip",
+          "platform": "windows",
+          "model": "Y1",
+          "type": "Type A",
+          "size": 771402958,
+          "sha256": "d99283f584844ddd1ef79744ab335db3dd3916a76f3c9299a199ea4312fe0d55",
+          "url": "https://github.com/y1-community/rondo-mirror/releases/download/v4.0.3/rom-windows.zip",
+          "fallback_url": "https://github.com/ryan-specter/rondo-mirror/releases/download/v4.0.3/rom-windows.zip"
+        },
+        {
+          "name": "rom-windows-legacy.zip",
+          "source_asset": "rom.zip",
+          "platform": "windows-legacy",
+          "model": "Y1",
+          "type": "Type A",
+          "size": 533164105,
+          "sha256": "55fe5dee8538f7ebb25b7324adbbb9271f510af8a3a265018a4e678ea530ec42",
+          "url": "https://github.com/y1-community/rondo-mirror/releases/download/v4.0.3/rom-windows-legacy.zip",
+          "fallback_url": "https://github.com/ryan-specter/rondo-mirror/releases/download/v4.0.3/rom-windows-legacy.zip"
+        },
+        {
+          "name": "rom-linux.zip",
+          "source_asset": "rom.zip",
+          "platform": "linux",
+          "model": "Y1",
+          "type": "Type A",
+          "size": 769344084,
+          "sha256": "cb2812299d3e86c869309efd86a9642c88db4ac21d496123aae3def501a5d667",
+          "url": "https://github.com/y1-community/rondo-mirror/releases/download/v4.0.3/rom-linux.zip",
+          "fallback_url": "https://github.com/ryan-specter/rondo-mirror/releases/download/v4.0.3/rom-linux.zip"
+        },
+        {
+          "name": "rom-linux-arm64.zip",
+          "source_asset": "rom.zip",
+          "platform": "linux-arm64",
+          "model": "Y1",
+          "type": "Type A",
+          "size": 594250805,
+          "sha256": "9b420953c3be2bb5b7b55dc6597eb37f310f55dde58af69781b9d618b7031ad8",
+          "url": "https://github.com/y1-community/rondo-mirror/releases/download/v4.0.3/rom-linux-arm64.zip",
+          "fallback_url": "https://github.com/ryan-specter/rondo-mirror/releases/download/v4.0.3/rom-linux-arm64.zip"
+        },
+        {
+          "name": "rom-linux-legacy.zip",
+          "source_asset": "rom.zip",
+          "platform": "linux-legacy",
+          "model": "Y1",
+          "type": "Type A",
+          "size": 531578390,
+          "sha256": "c514e8ebd17014ce526f2fc980bcb20e49668b6de196bb895eb4a515086af0ed",
+          "url": "https://github.com/y1-community/rondo-mirror/releases/download/v4.0.3/rom-linux-legacy.zip",
+          "fallback_url": "https://github.com/ryan-specter/rondo-mirror/releases/download/v4.0.3/rom-linux-legacy.zip"
+        },
+        {
+          "name": "rom-macos.zip",
+          "source_asset": "rom.zip",
+          "platform": "macos",
+          "model": "Y1",
+          "type": "Type A",
+          "size": 569367994,
+          "sha256": "6c99cbd583f49bf1d31bd33d42644527b74bc48612abfc170abb64983d9187c4",
+          "url": "https://github.com/y1-community/rondo-mirror/releases/download/v4.0.3/rom-macos.zip",
+          "fallback_url": "https://github.com/ryan-specter/rondo-mirror/releases/download/v4.0.3/rom-macos.zip"
+        }
+      ],
+      "original_assets": [
+        "rom.zip",
+        "rondo-4.0.3.rondo",
+        "updater.png"
+      ],
+      "stats_url": "https://github.com/y1-community/rondo-mirror/releases/download/v4.0.3/stats.txt"
+    },
+    {
+      "tag": "v4.0.2",
+      "title": "Portable Flashing Package: Rondo 4.0.2",
+      "source_title": "Rondo 4.0.2",
+      "source_url": "https://github.com/jarvissax/rondo/releases/tag/v4.0.2",
+      "source_fallback_url": "",
+      "published_at": "2026-11-21T14:18:47Z",
+      "prerelease": false,
+      "source_notes": "\nAn update for the 4.0 firmware: Settings \u203a System \u203a Software update, the dashboard or the\n[update page](https://jarvissax.github.io/rondo/). It works with Rondo server 3.1.0 or newer, as\n4.0.1 does.\n\n### Fixed\n\n- **Bluetooth headphones that paired but didn't connect:** right after pairing, or when you chose\n  paired headphones, the Bluetooth screen started looking for devices again while they connected,\n  and the connection gave up after a few seconds (\"not connected\"). Nothing is searched for now\n  while headphones pair or connect, so they connect right after pairing.\n- **Headphones that didn't come back by themselves:** after a search, the Y1 stopped accepting\n  connections until Bluetooth was turned off and on, so headphones taken out of their case or\n  switched on again couldn't reconnect to it. The Y1 now stays open to them, and it no longer shows\n  itself to every phone around while Bluetooth is on.\n- **Headphones that started loud:** each time headphones connected, they took the volume of the\n  speaker or the wired headphones, and earbuds taken out of their case start playing at once. They\n  now keep a volume of their own: the one you last set while they were connected.\n",
+      "assets": [
+        {
+          "name": "rom-windows.zip",
+          "source_asset": "rom.zip",
+          "platform": "windows",
+          "model": "Y1",
+          "type": "Type A",
+          "size": 771403258,
+          "sha256": "48f4e2e3a9c087a57355d0f9170fe845798f21a940d07eba5b3d2a3c5aebc839",
+          "url": "https://github.com/y1-community/rondo-mirror/releases/download/v4.0.2/rom-windows.zip",
+          "fallback_url": "https://github.com/ryan-specter/rondo-mirror/releases/download/v4.0.2/rom-windows.zip"
+        },
+        {
+          "name": "rom-windows-legacy.zip",
+          "source_asset": "rom.zip",
+          "platform": "windows-legacy",
+          "model": "Y1",
+          "type": "Type A",
+          "size": 533164405,
+          "sha256": "27ce9b56ec4139f9d233497adc091036b45a105d3dd51d90cb451fbbe0ee7bcc",
+          "url": "https://github.com/y1-community/rondo-mirror/releases/download/v4.0.2/rom-windows-legacy.zip",
+          "fallback_url": "https://github.com/ryan-specter/rondo-mirror/releases/download/v4.0.2/rom-windows-legacy.zip"
+        },
+        {
+          "name": "rom-linux.zip",
+          "source_asset": "rom.zip",
+          "platform": "linux",
+          "model": "Y1",
+          "type": "Type A",
+          "size": 769344384,
+          "sha256": "6feed89119085695e934d861fb90504dc780c975d6b6f35592e3956232d82768",
+          "url": "https://github.com/y1-community/rondo-mirror/releases/download/v4.0.2/rom-linux.zip",
+          "fallback_url": "https://github.com/ryan-specter/rondo-mirror/releases/download/v4.0.2/rom-linux.zip"
+        },
+        {
+          "name": "rom-linux-arm64.zip",
+          "source_asset": "rom.zip",
+          "platform": "linux-arm64",
+          "model": "Y1",
+          "type": "Type A",
+          "size": 594251105,
+          "sha256": "5f1c93d03983ba97e10ddc021fdb93e8e3feb2c9eae3426dd4cc45896d09691c",
+          "url": "https://github.com/y1-community/rondo-mirror/releases/download/v4.0.2/rom-linux-arm64.zip",
+          "fallback_url": "https://github.com/ryan-specter/rondo-mirror/releases/download/v4.0.2/rom-linux-arm64.zip"
+        },
+        {
+          "name": "rom-linux-legacy.zip",
+          "source_asset": "rom.zip",
+          "platform": "linux-legacy",
+          "model": "Y1",
+          "type": "Type A",
+          "size": 531578690,
+          "sha256": "98234700a144840d6b337a438976052b628dc3776675d0f20a597142e0f74fca",
+          "url": "https://github.com/y1-community/rondo-mirror/releases/download/v4.0.2/rom-linux-legacy.zip",
+          "fallback_url": "https://github.com/ryan-specter/rondo-mirror/releases/download/v4.0.2/rom-linux-legacy.zip"
+        },
+        {
+          "name": "rom-macos.zip",
+          "source_asset": "rom.zip",
+          "platform": "macos",
+          "model": "Y1",
+          "type": "Type A",
+          "size": 569368294,
+          "sha256": "ba6099b0d1969a21b4be6fb87517a091dddcec54d33a31a530beb0c6b59fa4d0",
+          "url": "https://github.com/y1-community/rondo-mirror/releases/download/v4.0.2/rom-macos.zip",
+          "fallback_url": "https://github.com/ryan-specter/rondo-mirror/releases/download/v4.0.2/rom-macos.zip"
+        }
+      ],
+      "original_assets": [
+        "rom.zip",
+        "rondo-4.0.2.rondo",
+        "updater.png"
+      ],
+      "stats_url": "https://github.com/y1-community/rondo-mirror/releases/download/v4.0.2/stats.txt"
+    },
     {
       "tag": "v4.0.1",
       "title": "Portable Flashing Package: Rondo 4.0.1",
