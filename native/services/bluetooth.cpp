@@ -8,6 +8,7 @@
 //   pair 0x7e (address +0x20) -> a PIN request 0xa3, answered 0000 (0x75), or an SSP confirmation
 //     0xa4, accepted (0x76), as 1.0.x did; the result as 0xab (result +0x20, address +0x24)
 //   forget 0x7f (address +0x20) -> 0xad; a device's name 0xc2 (address +0x20, length +0x28, name +0x29)
+//   scan mode 0x6d (+0x20: bit 1 page scan, bit 0 inquiry scan) -> 0x9b (result +0x20, 0 done)
 #include "bluetooth.h"
 
 #include <errno.h>
@@ -412,9 +413,16 @@ void Bluetooth::onGap(uint8_t* m, ssize_t n) {
   uint32_t id = u32(m, 4);
   if (kBtLog) fprintf(stderr, "bt: gap 0x%x (%zd bytes) +0x20=%u\n", id, n, m[0x20]);
   switch (id) {
-    case 0x91:  // powered on: the profiles, the paired devices, the headphones last used
+    case 0x91:  // powered on: the scan mode, the profiles, the paired devices, the headphones last used
       if (m[0x20]) {
         power_ = 2;
+        // connectable, not discoverable, as Android asked for after every power on (MediaTek's
+        // enableNative): left to itself mtkbt had page and inquiry scan both on, or, with a
+        // connection going out at once, both off, until Bluetooth went off again (Nov 21), so
+        // paired headphones that came on couldn't connect
+        memset(r, 0, kIlm);
+        r[0x20] = 2;  // bit 1 page scan (connectable), bit 0 inquiry scan (discoverable)
+        sendGap(0x6d, r, 8);
         if (!a2dpActive_ && a2dp_ >= 0 && a2dpApi_ >= 0) btmtk_a2dp_send_activate_req(a2dp_, a2dpApi_), a2dpActive_ = true;
         if (!avrcpActive_ && avrcpApi_ >= 0) {
           memset(r, 0, kIlm);
@@ -563,16 +571,40 @@ void Bluetooth::a2dpState(int state) {
   }
 }
 
+// The headphones' own music level: the A2DP line rondo-player keeps in volumes.txt ("<device, hex>
+// <level>", the one turned saved as it turns), within the volume limit; -1 if they never had one.
+int Bluetooth::savedVolume() const {
+  std::string dir = stateFile_.substr(0, stateFile_.rfind('/') + 1);
+  int level = -1;
+  if (FILE* f = fopen((dir + "volumes.txt").c_str(), "r")) {
+    unsigned device;
+    int index;
+    while (fscanf(f, "%x %d", &device, &index) == 2)
+      if (device == AUDIO_DEVICE_OUT_BLUETOOTH_A2DP && index >= 0) level = index;
+    fclose(f);
+  }
+  if (FILE* f = fopen((dir + "volume-limit").c_str(), "r")) {
+    int limit;
+    if (level > 0 && fscanf(f, "%d", &limit) == 1 && limit >= 0) level = std::min(level, limit);
+    fclose(f);
+  }
+  return level;
+}
+
 // The music to the headphones, as Android's audio service did on every A2DP connection: the output made
 // available to the audio policy, and "force use for media" none (an old no-A2DP kept music on the jack).
-// The headphones start at the volume music had (Android kept one per output; without its audio service
-// the A2DP output would take mediaserver's default, which can be loud).
+// The headphones keep a level of their own, as Android kept one per output: until Nov 21 they took
+// the level of the output in use on every connection (the speaker's 10 of 13), and earbuds out of
+// their case send Play. Only headphones that never had one start at the level music had (without
+// Android's audio service the A2DP output would take mediaserver's default, which can be loud).
 void Bluetooth::route(bool on, const std::string& address) {
   using android::AudioSystem;
   if (kBtLog) fprintf(stderr, "bt: route %s %s\n", on ? "on" : "off", address.c_str());
   if (on) {
-    int index = 0;
-    AudioSystem::getStreamVolumeIndex(AUDIO_STREAM_MUSIC, &index, AudioSystem::getDevicesForStream(AUDIO_STREAM_MUSIC));
+    int index = savedVolume();
+    if (index < 0)
+      AudioSystem::getStreamVolumeIndex(AUDIO_STREAM_MUSIC, &index, AudioSystem::getDevicesForStream(AUDIO_STREAM_MUSIC));
+    if (kBtLog) fprintf(stderr, "bt: the headphones at %d\n", index);
     AudioSystem::setStreamVolumeIndex(AUDIO_STREAM_MUSIC, index, AUDIO_DEVICE_OUT_BLUETOOTH_A2DP);
     AudioSystem::setDeviceConnectionState(AUDIO_DEVICE_OUT_BLUETOOTH_A2DP, AUDIO_POLICY_DEVICE_STATE_AVAILABLE, address.c_str());
     AudioSystem::setForceUse(AUDIO_POLICY_FORCE_FOR_MEDIA, AUDIO_POLICY_FORCE_NONE);
@@ -613,8 +645,16 @@ void Bluetooth::onAvrcp(uint8_t* m, ssize_t n) {
   }
 }
 
+// Pairing or connecting: a search would stall it. With one running, A2DP's stream open timed out
+// after 6 s, twice in a row (Nov 21): connect() cancels the search, but the Bluetooth screen, or
+// its return from a device's screen, started one again at once.
+bool Bluetooth::busy() const {
+  if (connectSince_ || !pendingConnect_.empty() || !pendingPair_.empty()) return true;
+  return std::any_of(devs_.begin(), devs_.end(), [](const Dev& d) { return d.pairing || d.a2dp == 1; });
+}
+
 void Bluetooth::startSearch() {
-  if (power_ != 2 || searching_) return;
+  if (power_ != 2 || searching_ || busy()) return;
   // with the fields btmtk_gap_discovery sets: every class, its inquiry length and number of answers
   static uint8_t m[kIlm];
   memset(m, 0, kIlm);
