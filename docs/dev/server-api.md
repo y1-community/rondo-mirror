@@ -14,6 +14,12 @@ the same paths either way.
 
 ## How it fits together
 
+- **The Rondo's language:** each request from a Rondo says it in `Accept-Language` (`es`; a Rondo
+  before 4.1.0 says none: English). YouTube is asked in it (youtubei.js's context `hl`, per request),
+  so its titles, shelf names, view counts and dates come in it, and the few words the server puts in
+  itself (`"49 songs"`, `"Liked Music"`, `"2.3B views"`) come from `lang/<code>.json`'s `device`
+  section (`feed.*`; server/src/lang.ts `say()`). The answers kept for a while are kept per language.
+  `/music/search` and `/video/search` stay in English (YouTube ranks results by the language asked).
 - **First run:** no admin password yet. The server prints a one-time **setup code** in its log
   (`docker logs rondo`): `Rondo setup: open <base>/admin and enter 482-913`. The page asks for that
   code and a new admin password (at least 10 characters). The code changes on every restart until
@@ -67,6 +73,9 @@ the same paths either way.
 Paths under `/admin/api`. Everything except `state`, `setup`, `login` needs the admin session
 (`401 {"error": "signin"}` otherwise → the page shows sign-in).
 
+- `GET /admin/lang/<codes>` (no sign-in) → `{"code", "name", "languages": [{"code", "name"}], "strings":
+  {key: text}}`: the page's texts (`lang/*.json`'s `admin` section, English's where a language has none)
+  in the nearest language to `<codes>`, a browser's list (`es-MX,es,en`); English when none is near.
 - `GET /admin/api/state` → `{"setup": true | false, "signedIn": true | false, "https": bool, "version": "1.0.2"}`
   (no sign-in needed; the page watches `version` change while the server updates itself)
   (`setup: true` = no admin password yet).
