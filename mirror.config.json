@@ -6,6 +6,8 @@
   "post_install": [
     "https://github.com/jarvissax/rondo/blob/main/docs/install.md#first-start"
   ],
+  "post_install2": [],
+  "icon": "https://innioasis.app/assets/rondo_icon.jpg",
   "title_prefix": "Portable Flashing Package: ",
   "copy_original_assets": true,
   "source_readme": {
