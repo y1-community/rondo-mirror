@@ -5,6 +5,28 @@ Rondo's releases, newest first. Each one is on the
 Innioasis Updater CE and the update for a Y1 that already runs Rondo. Since 3.0.2 the server has
 releases of its own, in [server/CHANGELOG.md](server/CHANGELOG.md).
 
+## 4.1.1 (November 24, 2026)
+
+An update for the 4.0 firmware: Settings › System › Software update, the dashboard or the
+[update page](https://jarvissax.github.io/rondo/). It works with Rondo server 3.1.0 or newer, as
+4.1.0 does; WhatsApp's own words come in your language with server 3.6.1.
+
+### New
+
+- **Turn the Y1 off from the main menu** ([#6](https://github.com/jarvissax/rondo/issues/6)): hold
+  center there for 2 seconds. A bar fills while you hold; let go sooner and nothing happens. The Y1
+  has no power button of its own (center only switches it on), so until now shutting down took
+  Settings › System › Shut down. Holding center everywhere else still opens the options.
+- **The update page speaks Spanish:** it starts in the browser's language when Rondo has it, with a
+  language picker.
+
+### Fixed
+
+- **Now Playing's cover with Large text** ([#7](https://github.com/jarvissax/rondo/issues/7)): at the
+  largest text size the cover never came, only the note in its place. It's there at every size now,
+  and on a Y1 that tried Large before, the covers come back by themselves.
+- **The guides named a Power button the Y1 doesn't have.** They now say how to turn it off.
+
 ## 4.1.0 (November 22, 2026)
 
 An update for the 4.0 firmware: Settings › System › Software update, the dashboard or the
