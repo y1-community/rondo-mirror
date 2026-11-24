@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "generated_at": "2026-11-22T23:10:14Z",
+  "generated_at": "2026-11-24T11:44:36Z",
   "source_repo": "jarvissax/rondo",
   "source_fallback_repo": "",
   "mirror_repo": "y1-community/rondo-mirror",
@@ -67,6 +67,90 @@
     }
   ],
   "releases": [
+    {
+      "tag": "v4.1.1",
+      "title": "Portable Flashing Package: Rondo 4.1.1",
+      "source_title": "Rondo 4.1.1",
+      "source_url": "https://github.com/jarvissax/rondo/releases/tag/v4.1.1",
+      "source_fallback_url": "",
+      "published_at": "2026-11-24T06:25:02Z",
+      "prerelease": false,
+      "source_notes": "An update for the 4.0 firmware: Settings \u203a System \u203a Software update, the dashboard or the\n[update page](https://jarvissax.github.io/rondo/). It works with Rondo server 3.1.0 or newer, as\n4.1.0 does; WhatsApp's own words come in your language with server 3.6.1.\n\n### New\n\n- **Turn the Y1 off from the main menu** ([#6](https://github.com/jarvissax/rondo/issues/6)): hold\n  center there for 2 seconds. A bar fills while you hold; let go sooner and nothing happens. The Y1\n  has no power button of its own (center only switches it on), so until now shutting down took\n  Settings \u203a System \u203a Shut down. Holding center everywhere else still opens the options.\n- **The update page speaks Spanish:** it starts in the browser's language when Rondo has it, with a\n  language picker.\n\n### Fixed\n\n- **Now Playing's cover with Large text** ([#7](https://github.com/jarvissax/rondo/issues/7)): at the\n  largest text size the cover never came, only the note in its place. It's there at every size now,\n  and on a Y1 that tried Large before, the covers come back by themselves.\n- **The guides named a Power button the Y1 doesn't have.** They now say how to turn it off.\n\n",
+      "assets": [
+        {
+          "name": "rom-windows.zip",
+          "source_asset": "rom.zip",
+          "platform": "windows",
+          "model": "Y1",
+          "type": "Type A",
+          "size": 647875922,
+          "sha256": "40d6bb3829b415eb7d57fb5d62948950b049816667bcecb80dad5a292079e244",
+          "url": "https://github.com/y1-community/rondo-mirror/releases/download/v4.1.1/rom-windows.zip",
+          "fallback_url": "https://github.com/ryan-specter/rondo-mirror/releases/download/v4.1.1/rom-windows.zip"
+        },
+        {
+          "name": "rom-windows-legacy.zip",
+          "source_asset": "rom.zip",
+          "platform": "windows-legacy",
+          "model": "Y1",
+          "type": "Type A",
+          "size": 532968882,
+          "sha256": "27b66f3615bac8a07be125099582ac1ab365cfb654187391d4c161fff79fadaf",
+          "url": "https://github.com/y1-community/rondo-mirror/releases/download/v4.1.1/rom-windows-legacy.zip",
+          "fallback_url": "https://github.com/ryan-specter/rondo-mirror/releases/download/v4.1.1/rom-windows-legacy.zip"
+        },
+        {
+          "name": "rom-linux.zip",
+          "source_asset": "rom.zip",
+          "platform": "linux",
+          "model": "Y1",
+          "type": "Type A",
+          "size": 769437801,
+          "sha256": "09df9d807931dd881fa1007f75e4195e5e94c3dbb2ea5c9218a4c06d7b86fdb8",
+          "url": "https://github.com/y1-community/rondo-mirror/releases/download/v4.1.1/rom-linux.zip",
+          "fallback_url": "https://github.com/ryan-specter/rondo-mirror/releases/download/v4.1.1/rom-linux.zip"
+        },
+        {
+          "name": "rom-linux-arm64.zip",
+          "source_asset": "rom.zip",
+          "platform": "linux-arm64",
+          "model": "Y1",
+          "type": "Type A",
+          "size": 594344563,
+          "sha256": "ecbcfb3cf3b4ffb7970606267ed5ccd68749dbb66d8b27ea1bfcb9eb0a8b8631",
+          "url": "https://github.com/y1-community/rondo-mirror/releases/download/v4.1.1/rom-linux-arm64.zip",
+          "fallback_url": "https://github.com/ryan-specter/rondo-mirror/releases/download/v4.1.1/rom-linux-arm64.zip"
+        },
+        {
+          "name": "rom-linux-legacy.zip",
+          "source_asset": "rom.zip",
+          "platform": "linux-legacy",
+          "model": "Y1",
+          "type": "Type A",
+          "size": 531383167,
+          "sha256": "aed696f39ba7f0b2c8189740082be261e8ae73416cd65ca2e071f26529fb97e6",
+          "url": "https://github.com/y1-community/rondo-mirror/releases/download/v4.1.1/rom-linux-legacy.zip",
+          "fallback_url": "https://github.com/ryan-specter/rondo-mirror/releases/download/v4.1.1/rom-linux-legacy.zip"
+        },
+        {
+          "name": "rom-macos.zip",
+          "source_asset": "rom.zip",
+          "platform": "macos",
+          "model": "Y1",
+          "type": "Type A",
+          "size": 569189379,
+          "sha256": "0eb26192a4a5dfed1eb9b9ac461ba98d76432d267df9f726bf5b68fb5a3fc974",
+          "url": "https://github.com/y1-community/rondo-mirror/releases/download/v4.1.1/rom-macos.zip",
+          "fallback_url": "https://github.com/ryan-specter/rondo-mirror/releases/download/v4.1.1/rom-macos.zip"
+        }
+      ],
+      "original_assets": [
+        "rom.zip",
+        "rondo-4.1.1.rondo",
+        "updater.png"
+      ],
+      "stats_url": "https://github.com/y1-community/rondo-mirror/releases/download/v4.1.1/stats.txt"
+    },
     {
       "tag": "v4.1.0",
       "title": "Portable Flashing Package: Rondo 4.1.0",
