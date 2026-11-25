@@ -20,6 +20,11 @@ the same paths either way.
   itself (`"49 songs"`, `"Liked Music"`, `"2.3B views"`) come from `lang/<code>.json`'s `device`
   section (`feed.*`; server/src/lang.ts `say()`). The answers kept for a while are kept per language.
   `/music/search` and `/video/search` stay in English (YouTube ranks results by the language asked).
+- **How far a video was watched:** since 3.8.0 (3.8.1 with the code sign-in) a YouTube video in a list (`/video/home`,
+  `/video/subscriptions`, `/video/history`, search, related) may carry `"watched": <1–100>`, the
+  account's progress as YouTube's red bar shows it (youtubei.js: a lockup's `ThumbnailBottomOverlayView`
+  progress bar, a video's `ThumbnailOverlayResumePlayback`). The Rondo (4.3.0) opens a video it has no
+  place of its own for at about that point. Absent: not started, or no account.
 - **First run:** no admin password yet. The server prints a one-time **setup code** in its log
   (`docker logs rondo`): `Rondo setup: open <base>/admin and enter 482-913`. The page asks for that
   code and a new admin password (at least 10 characters). The code changes on every restart until
@@ -56,7 +61,10 @@ the same paths either way.
   `http://<server-ip>:3000` directly; the admin page and the dashboard mark such a connection
   "not encrypted: use it only on your home network".
 - Settings are kept in `/data/config.json` on the server's volume (admin password hash, device
-  token hash, pairing time, last seen). Secrets are never returned by any endpoint.
+  token hash, pairing time, last seen, the Podcast Index API key and secret). The file is readable by
+  the server only (0600). The password and the token are kept as hashes; the Podcast Index key and
+  secret as they are, since every Podcast Index request is signed with them. Secrets are never
+  returned by any endpoint or written to the log.
 
 ## Guessing limits
 
@@ -98,6 +106,7 @@ Paths under `/admin/api`. Everything except `state`, `setup`, `login` needs the 
    "whatsapp": {"state": "unlinked" | "linking" | "connecting" | "open" | "closed",
                 "me": {"jid", "name", "number"} | null, "code": {"code": "K7Q2MX4R", "expiresAt": …} | null,
                 "error": "", "syncing": bool, "chats": 87} | null,
+   "podcastIndex": {"set": true, "key": "UXKC…" | null, "setAt": 1793440000000 | null},
    "updates": {"server": {"version": "1.0.1", "url": "https://github.com/…", "publishedAt": …} | null,
                "ytdlp": {"version": "2026.11.01.233542", "url": "…", "publishedAt": …} | null, "checkedAt": … | null}}
   ```
@@ -140,6 +149,17 @@ Paths under `/admin/api`. Everything except `state`, `setup`, `login` needs the 
   is never logged.
 - `POST /admin/api/whatsapp/unlink` → the status: the server leaves the linked devices and deletes
   the chats and media it kept (also a waiting code's cancel).
+- `POST /admin/api/podcasts/key` `{"key": "…", "secret": "…"}` (server 3.7.0) → `{"ok": true,
+  "podcastIndex": {"set": true, "key": "UXKC…", "setAt": …}}`: saves the Podcast Index API key and
+  secret (free at [api.podcastindex.org/signup](https://api.podcastindex.org/signup)) for
+  `GET /podcasts/index/search`; replaces a saved one. `400 {"error": "key"}` or `{"error": "secret"}`
+  when one isn't 8 to 200 printable characters without spaces. The secret never comes back: `status`
+  shows the key's first four characters only.
+- `DELETE /admin/api/podcasts/key` → `{"ok": true}` (podcast search on the Rondo is Apple's directory
+  only again).
+- `POST /admin/api/podcasts/check` → `{"ok": true, "ms": 412}`, or `{"ok": false, "error": "no_key" |
+  "key" | "upstream", "status"?: 401}`: one search on Podcast Index with the saved key (`key`: Podcast
+  Index refused it; `upstream`: it failed or didn't answer).
 
 ## Device pairing (called by the Rondo, not the admin page)
 
@@ -205,6 +225,88 @@ route: it answers `503 {"error": "needs_server"}`.
   song by, from the song's queue row and its album's page (`year` "" and `track` 0 when YouTube doesn't
   say). A Rondo whose server has no such route names a download from the song's row ("Artist · Album").
   Direct mode on the Y1 answers it itself (`native/direct/music.cpp`).
+
+## YouTube Music's podcasts for the Rondo (device token)
+
+Server 3.7.0, not released yet (`server/src/podcasts.ts`), all new routes; direct mode on the Y1 answers the same ones
+itself (`native/direct/podcasts.cpp`). An episode is `{"kind": "episode", "id", "title", "subtitle",
+"thumb", "durationSec"?, "show", "showId", "date", "length"?, "progress"?, "played"?}`: `date` and
+`length` are YouTube's words in the Rondo's language, `durationSec` only where YouTube gives a clock,
+`progress` (0–100) and `played` only signed in. A show is `{"kind": "podcast", "id": "MPSP…",
+"title", "subtitle": its author, "thumb"}`.
+
+- `GET /music/podcasts` → `{"items": [shows], "later", "latest"}`: the account's saved shows, and
+  YouTube's words for how many episodes Episodes for Later and New Episodes hold. 503
+  `no_cookies` without cookies.txt (the code sign-in's TV app has no podcasts).
+- `GET /music/podcasts/later`, `/music/podcasts/new` → `{"items", "next"}`: Episodes for Later
+  (VLSE) and New Episodes (VLRDPN), paged. 503 without cookies.txt.
+- `GET /music/podcast/:id` (MPSP… or the playlist id) → `{"title", "subtitle", "thumb",
+  "description", "saved"?, "items", "next"}`: a show's episodes newest first, 20 a page, then 100.
+- `GET /music/episode/:id` → `{"id", "title", "show", "showId", "thumb", "description",
+  "durationSec", "date", "chapters": [{"ms", "title"}], "progress"?, "played"?, "later"?}`: the
+  chapters are YouTube's markers (none: `[]`); the length from YouTube Music's queue row.
+- `GET /music/search?type=podcast|episode&q=` → `{"items", "next"}` (shows, or episodes). A server
+  before 3.7.0 answers 400 for these types.
+- `POST /music/podcast/:id/save` `{"saved": bool}`, `POST /music/episode/:id/later`
+  `{"later": bool}`, `POST /music/episode/:id/played` `{"played": bool}` → the same body back:
+  Save to library, Episodes for Later, Mark as played or unplayed, as YouTube Music's own buttons
+  (YouTube shows a change some seconds late). 503 without cookies.txt.
+- `GET /music/home?podcasts=1`: Home's shelves with shows and episodes as such (without it, as before).
+
+## RSS podcasts for the Rondo (device token)
+
+Server 3.7.0, not released yet (`server/src/rss.ts`, `rssFeed.ts`, `feedFetch.ts`,
+`podcastIndex.ts`), new routes only. A Rondo reads podcast feeds and plays episodes straight from the
+podcasts' own hosts, in both modes; these two only help it.
+
+- `GET /podcasts/feed?url=<feed address>&offset=0&limit=100&since=<unix seconds>` → the feed read
+  for the Rondo (`rssFeed.ts`, the same rules as the Y1's own parser), a page of its episodes at a
+  time:
+  ```json
+  {"feed": "https://example.com/feed.xml", "title": "…", "author": "…", "description": "…",
+   "art": "https://…", "link": "https://…", "language": "en-us", "serial": false, "explicit": false,
+   "complete": false, "newFeedUrl": "", "count": 523, "offset": 0, "next": 100,
+   "episodes": [{"guid": "…", "title": "…", "date": 1732500000, "duration": 3600,
+                 "url": "https://…/ep.mp3", "type": "audio/mpeg", "size": 12345678, "image": "",
+                 "chapters": "", "season": 0, "episode": 0, "episodeType": "full", "notes": "…"}]}
+  ```
+  `feed` is the address the feed was read from in the end (after permanent redirects, 301 and 308,
+  that no temporary one came before); `count` every episode the feed has (an item without an
+  enclosure isn't one); `episodes` in the feed's own order, `limit` of them (1 to 500, default 100)
+  from `offset`, with each episode's `notes` (plain text, at most 4000 bytes; the show's description
+  at most 2000); `next` the next page's offset, or `null` on the last. With `since`, only the
+  episodes dated after it are paged (`offset`, `limit` and `next` count within those; an episode
+  without a readable date is never after it), while `count` and the channel are as always: how a
+  Rondo fetches just the new episodes of a big feed it has. A value that isn't a number is left out (`offset` 0, `limit` 100, no
+  `since`).
+
+  The server fetches the feed with its own user agent (`Rondo server (…)`), following up to 5
+  redirects, in at most 30 s, and refuses one over 60 MB (counted unpacked; gzip, deflate and br are
+  asked for). A feed is kept in memory for 10 minutes (at most 200 feeds, about 64 MB of text in all,
+  the least recently used going first), then asked again with `If-None-Match` /
+  `If-Modified-Since`; nothing is written to disk. An address with a user name and password sends
+  them as Basic auth to that host only. Errors:
+  - `400 {"error": "url"}`: no address, not http(s), or a host (the feed's or a redirect's) that
+    resolves to an address on a private network: loopback, private (10/8, 172.16/12, 192.168/16, fc00::/7),
+    link-local (169.254/16, fe80::/10), carrier-grade NAT (100.64/10), multicast, documentation or
+    otherwise reserved, IPv4 inside IPv6 too. The addresses are checked again as the connection opens,
+    so a name that answers differently the second time can't get through.
+  - `502 {"error": "upstream", "status": 404}`: the host answered an error (`status` its HTTP status;
+    0 when it didn't answer: no such host, refused, a broken TLS or gzip; a 3xx when there were more
+    than 5 redirects).
+  - `504 {"error": "timeout"}`, `413 {"error": "too_big"}`, `422 {"error": "not_feed"}` (not RSS 2.0:
+    no `<rss><channel>`, such as a web page or an Atom feed).
+- `GET /podcasts/index/search?q=<words>&max=20` → `{"items": [{"feed", "title", "author", "art",
+  "id", "itunesId", "count", "language", "explicit"}]}`: shows from
+  [Podcast Index](https://podcastindex.org) (its `/search/byterm`) with the key saved on the admin
+  page's Podcasts page. `feed` is the show's feed address (for `/podcasts/feed`), `id` Podcast
+  Index's feed id, `itunesId` Apple's (`null` when none), `count` its episodes, `art` its artwork
+  (else its image), `language` lower case. `max` 1 to 100. Shows Podcast Index marks dead are left
+  out. Answers are kept 10 minutes. `400 {"error": "query"}` without `q`, `503 {"error": "no_key"}`
+  when no key is saved, `502 {"error": "upstream"}` when Podcast Index fails or refuses the key (a
+  warning in the admin page's Activity says which). Each request is signed as Podcast Index asks:
+  `User-Agent`, `X-Auth-Key`, `X-Auth-Date` (unix seconds) and `Authorization`, the lower-case
+  hex SHA-1 of key + secret + date.
 
 ## WhatsApp for the Rondo (device token)
 

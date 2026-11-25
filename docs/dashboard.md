@@ -37,7 +37,8 @@ shows no Install button: it points to Innioasis Updater CE instead.
 
 The sidebar has the pages in groups: **Overview**, **Library**, **FM Radio** and **YouTube**, then
 **Connections** (Wi-Fi, Bluetooth, Server) and **Settings** (Sound, Theme, General). On a phone the
-tabs at the bottom are Overview, Library, Radio, YouTube and **Settings**, which lists the rest.
+tabs at the bottom are Overview, Library, Radio, YouTube, Podcasts and **Settings**, which lists the
+rest.
 
 ## Library
 
@@ -46,7 +47,9 @@ Everything on the card, in five parts as on the Y1: **Music** (songs, albums and
 album, album artist, genre, year or date added, and by what you listen to: most played, recently
 played and rating. Albums are a Cover Flow: arrow keys, the mouse wheel or a drag move through the
 covers, and the album's songs are listed below. A song's details show its tags and plays, with
-stars to rate it.
+stars to rate it. Videos sort by **Continue watching** too: the ones you started on the Rondo, the
+last one first, each with how much is left; a video's details say where you stopped, and **Start
+again** makes it open at its beginning on the Rondo.
 
 - **Upload** music, videos and photos straight onto the card, several at a time: music goes to
   Music, videos to Videos, photos to Pictures; **Organize** then puts them where Jellyfin expects
@@ -93,6 +96,40 @@ stars to rate it.
   rules or any, choose the order (random, by artist, most played, best rated…) and a limit. The Y1
   works the songs out whenever you open one, so it follows what you add, play and rate; it lists
   them under **Library › Playlists**. They're `.smart.json` files beside the playlists.
+
+## Podcasts
+
+The Y1's [Podcasts](using.md#podcasts) (shows from their feeds) first, then YouTube Music's.
+
+**Shows from their feeds**, played on the Y1: **search** for a show by its name (Apple's directory,
+and Podcast Index's with a key); **Top shows** in your country, by category; **Continue listening**,
+**Episodes up next**, **New episodes** (**Look now** looks for more), **your shows** with how many new
+episodes each has, **Save for later** and what's **downloaded**. A show's page has **Subscribe**, its
+**speed**, **Download new episodes** (on Wi-Fi: keep the latest 1 to 10, and delete played ones if
+you like) and its episodes, newest first or a story's first first. An episode's **⋯** menu plays it
+on the Y1 (or from the start, or a video episode's sound alone), puts it in Episodes up next,
+downloads it (or deletes the download), saves it for later, marks it played, shows its notes and
+opens its show.
+
+- **Add by address** subscribes to a show by its feed's address: the one a private or paid show
+  gives you. The Y1 reads it itself; it goes to no server or directory.
+- **Import OPML** brings your shows from another podcast app (most can export an OPML file), one by
+  one, with how many came, were already here or couldn't be read. **Export OPML** saves yours.
+- **Country** chooses whose directory and charts search and Top shows use (the United States unless
+  you choose another), as Podcasts › Podcast settings on the Y1 does.
+- **More shows in search:** without a Rondo server, paste a free
+  [Podcast Index](https://api.podcastindex.org/signup) key and secret here, and search finds shows
+  there as well as in Apple's directory. They stay on the Y1 and aren't shown again. With a server,
+  its own key (on its admin page) is used.
+
+**YouTube Music's podcasts**, played on the Y1 (as its YouTube Music › Podcasts): **search** for a show or
+an episode; **Continue listening** and **Episodes up next** (take one off with ×); **Episodes for
+Later** and **New episodes**; what's **downloaded** on the card; and **your shows**. A show's page has
+**Save to library**, its **speed** (every episode of the show plays at it) and its episodes, newest
+first (**Show more** for older ones). Each episode shows where the Y1 has it; its **⋯** menu plays it
+on the Y1 (or from the start), puts it next or at the end of Episodes up next, downloads it to the
+card (or deletes the download), marks it played or unplayed (YouTube Music on your phone follows),
+saves it for later or takes it out, and opens its show.
 
 ## Theme
 

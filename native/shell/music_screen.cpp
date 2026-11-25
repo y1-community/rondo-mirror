@@ -7,6 +7,7 @@
 
 #include "../core/api.h"
 #include "music_list.h"
+#include "podcasts.h"
 
 namespace rondo::shell {
 namespace {
@@ -68,15 +69,30 @@ class MusicScreen : public TabbedListScreen {
   }
 
  private:
-  // Library only when the source has an account (Accounts.kt); signed out it's Home and search
+  // Library only when the source has an account (Accounts.kt); signed out it's Home, Podcasts (their
+  // search and the card's episodes) and search
   std::vector<std::string> wantedTabs() const override {
     std::vector<std::string> t{tr("music.home")};
     if (g_prefs.accountMusic) t.push_back(tr("common.library"));
+    t.push_back(tr("music.podcasts"));
     return t;
   }
-  void openSearch() override { g_app->push(makeMusicSearch()); }
+  bool podcastsTab(int tab) const { return tab >= 0 && tab < int(tabs_.size()) && tabs_[size_t(tab)] == tr("music.podcasts"); }
+  // on the Podcasts pill the search finds shows and episodes
+  void openSearch() override { g_app->push(podcastsTab(active_) ? makePodcastSearch() : makeMusicSearch()); }
+  // the Podcasts pill's rows again (what's on the card, Continue listening, Up next), its list as it came
+  void podcastRows(bool keep) {
+    // the same row stays selected when rows came or went above it (Continue listening, Episodes up next)
+    std::string was = keep && list_.selectedRow() ? list_.selectedRow()->title : "";
+    list_.setRows(podcastsTabRows(g_prefs.accountMusic, podStatus_, podBody_, podProblem_, [this] { load(active_); }), keep);
+    if (was.empty()) return;
+    const std::vector<Row>& rows = list_.rows();
+    for (size_t i = 0; i < rows.size(); i++)
+      if (!rows[i].header && rows[i].enabled && rows[i].title == was) return list_.selectIndex(int(i));
+  }
   // Home's Downloads says what's on the card now (a download made since it loaded)
   void onShow() override {
+    if (podcastsTab(active_) && podLoaded_) podcastRows(true);
     const std::vector<Shelf>& all = shelves_.shelves();
     if (all.empty() || !all[0].banner || all[0].cards.empty() || all[0].cards[0].tile != &tiles::downloads) return;
     Shelf now = downloadsShelf();
@@ -109,20 +125,28 @@ class MusicScreen : public TabbedListScreen {
     }
     return out;
   }
-  // the header: the logo, "Music", a pill per tab, the search button, the battery
+  // the header: the logo, "Music", a pill per tab, the search button, the battery. Three pills (Home,
+  // Library, Podcasts) leave no room for the word and the clock: the logo and the battery alone, as
+  // YouTube's header with its three
   void header(Env& e, float w, float h) {
     int H = e.dp(31);
     float x = float(e.dp(10));
     e.c.layer(4);
     int logo = e.dp(18);
     e.icons.musicLogo(e.c, {x, float((H - logo) / 2), float(logo), float(logo)});
-    x += logo + e.dp(6);
-    Label name = label(e, "Music", 15, true);
-    drawLabel(e, name, x, float((H - name.h) / 2), white);
-    x += name.w + e.dp(10);
+    bool three = tabs_.size() >= 3;
+    if (three) {
+      x += logo + e.dp(9);
+    } else {
+      x += logo + e.dp(6);
+      Label name = label(e, "Music", 15, true);
+      drawLabel(e, name, x, float((H - name.h) / 2), white);
+      x += name.w + e.dp(10);
+    }
     float pillsEnd = drawPills(e, x, H, h);
+    if (three) batteryIcon(e, w - e.dp(10), H, e.p.darkMuted);
     // battery only: the pills leave no room for Wi-Fi (the date goes too when they leave none for it)
-    statusIconsFit(e, pillsEnd + e.dp(10), w - e.dp(10), H, e.p.darkMuted, false);
+    else statusIconsFit(e, pillsEnd + e.dp(10), w - e.dp(10), H, e.p.darkMuted, false);
   }
   void load(int tab) override {
     active_ = tab;
@@ -133,10 +157,21 @@ class MusicScreen : public TabbedListScreen {
     list_.setMessage(tr("common.loading"));
     shelves_.clear();
     shelves_.active = focused_ < 0;
-    std::string path = tab == 0 ? "/music/home" : "/music/library";
+    podLoaded_ = false;
+    if (podcastsTab(tab) && !g_prefs.accountMusic) {  // signed out: what the card has, and the search
+      podStatus_ = 0, podBody_.clear(), podProblem_.clear(), podLoaded_ = true;
+      return podcastRows(false);
+    }
+    // Home with the podcasts on its shelves as such (a server before them answers as it always did)
+    std::string path = tab == 0 ? "/music/home?podcasts=1" : podcastsTab(tab) ? "/music/podcasts" : "/music/library";
     std::string name = tabs_[size_t(tab)];
-    requests_.get(path, 120000, [this, tab, path, name](int status, const std::string& body) {
+    requests_.get(path, podcastsTab(tab) ? podcastCacheMs() : 120000, [this, tab, path, name](int status, const std::string& body) {
       if (tab != active_) return;
+      if (podcastsTab(tab)) {
+        podStatus_ = status, podBody_ = status == 200 ? body : "", podLoaded_ = true;
+        podProblem_ = offlineOr(tr("music.cantLoadTab", {{"tab", name}, {"problem", httpProblem(status, path)}}));
+        return podcastRows(false);
+      }
       if (status != 200) {
         std::string problem = offlineOr(tr("music.cantLoadTab", {{"tab", name}, {"problem", httpProblem(status, path)}}));
         if (tab != 0) return list_.setMessage(problem);
@@ -182,7 +217,7 @@ class MusicScreen : public TabbedListScreen {
     if (active_ != 0 || next_.empty() || loading_) return;
     // (Home's next page comes as shelves: shelves_.onNearEnd)
     loading_ = true;
-    std::string path = "/music/home?next=" + Api::escape(next_);
+    std::string path = "/music/home?podcasts=1&next=" + Api::escape(next_);
     requests_.get(path, 0, [this](int status, const std::string& body) {
       loading_ = false;
       if (status == 410) next_.clear();
@@ -194,6 +229,9 @@ class MusicScreen : public TabbedListScreen {
     });
   }
 
+  int podStatus_ = 0;  // the Podcasts pill's GET /music/podcasts: its answer, kept to build its rows again
+  std::string podBody_, podProblem_;
+  bool podLoaded_ = false;
   std::vector<Item> items_;        // what is loaded so far: the queue around a chosen song
   ShelfView shelves_;              // Home
   std::string next_;

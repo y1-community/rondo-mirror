@@ -2,6 +2,8 @@
 #include "music_list.h"
 
 #include "downloads.h"
+#include "video_places.h"
+#include "podcasts.h"
 
 #include <math.h>
 #include <stdio.h>
@@ -81,7 +83,7 @@ void Ambient::draw(Env& e, Rect r) {
 }
 
 namespace {
-bool isContainer(const std::string& kind) { return kind == "playlist" || kind == "album" || kind == "artist"; }
+bool isContainer(const std::string& kind) { return kind == "playlist" || kind == "album" || kind == "artist" || kind == "podcast"; }
 }  // namespace
 
 std::string httpProblem(int status, const std::string& path) {
@@ -101,10 +103,14 @@ std::string offlineOr(const std::string& problem) {
 
 void openMusicItem(const Item& item, const std::vector<Item>& siblings) {
   if (isContainer(item.kind)) return openMusicContainer(item);
+  if (item.kind == "episode") {  // spoken word, by itself: the music waits for it (podcasts.h)
+    playEpisode(episodeOf(item));
+    return openNowPlaying();
+  }
   std::vector<Item> playable;
   int at = -1;
   for (const Item& s : siblings)
-    if (!isContainer(s.kind)) {
+    if (!isContainer(s.kind) && s.kind != "episode") {
       if (at < 0 && s.id == item.id) at = int(playable.size());  // the first copy, as indexOf
       playable.push_back(s);
     }
@@ -125,7 +131,8 @@ std::vector<Row> musicRows(const std::vector<Item>& items, std::function<std::ve
     r.chevron = container;
     Item item = it;
     r.onSelect = [item, queue] { openMusicItem(item, queue()); };
-    if (!container) r.onLongSelect = [item] { openSongMenu(item); };
+    if (it.kind == "episode") r.onLongSelect = [item] { openEpisodeMenu(episodeOf(item)); };
+    else if (!container) r.onLongSelect = [item] { openSongMenu(item); };
     if (!container && !it.id.empty() && it.id[0] != '/') r.ahead = it.id;
     rows.push_back(std::move(r));
   }
@@ -140,11 +147,60 @@ std::vector<Card> musicCards(const std::vector<Item>& items, std::function<std::
     c.title = it.title, c.subtitle = it.subtitle, c.thumb = it.thumb;
     Item item = it;
     c.onSelect = [item, queue] { openMusicItem(item, queue()); };
-    if (!isContainer(it.kind)) c.onLongSelect = [item] { openSongMenu(item); };
+    if (it.kind == "episode") c.onLongSelect = [item] { openEpisodeMenu(episodeOf(item)); };
+    else if (!isContainer(it.kind)) c.onLongSelect = [item] { openSongMenu(item); };
     if (!isContainer(it.kind) && !it.id.empty() && it.id[0] != '/') c.ahead = it.id;
     cards.push_back(std::move(c));
   }
   return cards;
+}
+
+namespace {
+// a started video's options (hold center on its row): Resume, Start again, and a YouTube video's Download
+class VideoMenuScreen : public MusicListScreen {
+ public:
+  explicit VideoMenuScreen(Item video) : MusicListScreen(video.title) {
+    std::vector<Row> rows;
+    auto add = [&](const std::string& title, const Tile& tile, std::string subtitle, std::function<void()> f) {
+      Row r;
+      r.title = title, r.tile = &tile, r.subtitle = std::move(subtitle);
+      r.onSelect = std::move(f);
+      rows.push_back(std::move(r));
+    };
+    std::string key = videoPlaceKey(video);
+    add(tr("book.resume"), tiles::resume, videoLeftText(key, video.durationSec), [video] {
+      g_app->pop();
+      openVideo(video);
+    });
+    add(tr("book.startAgain"), tiles::startAgain, "", [video, key] {
+      videoStartAgain(key);
+      g_app->pop();
+      openVideo(video);
+    });
+    if (!video.id.empty() && video.id[0] != '/')
+      add(tr("songList.download"), tiles::downloads, "", [video] {
+        g_app->pop();
+        askDownload(video);
+      });
+    list_.setRows(std::move(rows));
+  }
+  void draw(Env& e, float w, float h) override {
+    now_ = e.now;
+    ambient_.draw(e, {0, 0, w, h});
+    darkHeader(e, w, title_, HeaderLogo::Video);
+    float top = float(e.dp(31));
+    list_.layout(e, w, h - top);
+    list_.draw(e, 0, top);
+    e.c.layer(0);
+  }
+};
+}  // namespace
+
+// hold center on a video's row: its options once it's started, else (YouTube's) Download
+void videoRowHold(const Item& item) {
+  bool card = !item.id.empty() && item.id[0] == '/';
+  if (videoHasPlace(videoPlaceKey(item))) return g_app->push(std::unique_ptr<Screen>(new VideoMenuScreen(item)));
+  if (!card) askDownload(item);
 }
 
 std::vector<Row> videoRows(const std::vector<Item>& items) {
@@ -155,9 +211,10 @@ std::vector<Row> videoRows(const std::vector<Item>& items) {
     r.subtitle = it.subtitle;
     r.trailing = it.durationSec < 0 ? "" : formatTime(it.durationSec);
     r.thumb = it.thumb;
+    r.place = videoPlaceKey(it), r.placeLen = it.durationSec, r.placePct = it.watchedPct;
     Item item = it;
     r.onSelect = [item] { openVideo(item); };
-    if (!it.id.empty() && it.id[0] != '/') r.onLongSelect = [item] { askDownload(item); };
+    r.onLongSelect = [item] { videoRowHold(item); };
     if (!it.id.empty() && it.id[0] != '/') r.ahead = it.id;
     rows.push_back(std::move(r));
   }

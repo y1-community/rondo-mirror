@@ -368,6 +368,7 @@ const NAV = [
   { id: 'library', label: t('common.library'), tile: 'device', glyph: 'library', tab: true },
   { id: 'radio', label: t('nav.fmRadio'), short: t('common.radio'), tile: 'radio', glyph: 'radio', tab: true },
   { id: 'youtube', label: 'YouTube', brand: 'video', tab: true },
+  { id: 'podcasts', label: t('podcasts.title'), tile: 'podcasts', glyph: 'podcast', tab: true },
   { group: t('nav.connections') },
   { id: 'wifi', label: 'Wi-Fi', tile: 'wifi', glyph: 'wifi' },
   { id: 'bluetooth', label: 'Bluetooth', tile: 'bluetooth', glyph: 'bluetooth' },
@@ -386,8 +387,9 @@ const tileHtml = (tile, glyph) => `<span class="tile t-${tile}">${glyph ? icon(g
 const navTile = (n) => (n.brand ? brandTile(n.brand) : tileHtml(n.tile, n.glyph));  // YouTube's logo for its page
 function buildNav() {
   $('#nav').innerHTML = NAV.map((n) => n.group ? `<div class="nav-group">${esc(n.group)}</div>` : `<a href="#${n.id}" data-id="${n.id}">${navTile(n)}<span>${esc(n.label)}</span><span class="nav-badge"></span>${icon('chevron', 'chev')}</a>`).join('');
-  $('#moreRows').innerHTML = NAV.filter((n) => !n.tab).map((n) => n.group ? `</div><h2 class="gh">${esc(n.group)}</h2><div class="group">`
-    : `<a class="row more-row" href="#${n.id}">${navTile(n)}<div class="row-main"><div class="row-title">${esc(n.label)}</div></div>${icon('chevron', 'chev')}</a>`).join('').replace(/^<\/div>/, '') + '</div>';
+  // the rows before the first group (Podcasts) in a group of their own
+  $('#moreRows').innerHTML = ('<div class="group">' + NAV.filter((n) => !n.tab).map((n) => n.group ? `</div><h2 class="gh">${esc(n.group)}</h2><div class="group">`
+    : `<a class="row more-row" href="#${n.id}">${navTile(n)}<div class="row-main"><div class="row-title">${esc(n.label)}</div></div>${icon('chevron', 'chev')}</a>`).join('') + '</div>').replace('<div class="group"></div>', '');
   $('#tabs').innerHTML = TABS.map((n) => `<a class="tab" href="#${n.id}" data-id="${n.id}"><span class="tab-wrap">${navTile(n)}<span class="nav-badge"></span></span><span>${esc(n.short || n.label)}</span></a>`).join('');
 }
 function route() {
@@ -414,6 +416,7 @@ function enterView(id, force = false) {
   if (id === 'radio') loadRadio();
   if (id === 'server') loadServer();
   if (id === 'youtube') { loadServer(); loadYtAccount(); loadDownloads(); if (!S.settings) loadSettings(); }
+  if (id === 'podcasts') loadPodcasts(POD.view !== 'home');
 }
 
 // ---------- status polling ----------
@@ -867,6 +870,7 @@ function prepLibrary() {
   S.libByPath = new Map();
   for (const s of S.library.songs) { s._key = fold(`${s.title} ${s.artist} ${s.album} ${s.albumArtist || ''} ${s.genre || ''} ${s.year || ''} ${fileName(s.path)}`); S.libByPath.set(s.path, s); }
   for (const v of S.library.videos) { v._video = true; v._key = fold(`${v.title} ${fileName(v.path)}`); S.libByPath.set(v.path, v); }
+  S.watching = new Map((S.library.watching || []).map((w) => [w.path, w]));
 }
 function renderLibrarySummary() {
   const lib = S.library;
@@ -884,7 +888,11 @@ function renderLibrarySummary() {
 }
 // sorts that only songs have (tags, listening)
 const SONG_SORTS = ['artist', 'album', 'albumArtist', 'genre', 'year', 'plays', 'played', 'rating'];
-const sortKey = () => (S.libKind === 'videos' && SONG_SORTS.includes(S.libSort) ? 'title' : S.libSort);
+// and one only videos have: Continue watching, the ones started on the Rondo (a place kept)
+const VIDEO_SORTS = ['watching'];
+const sortKey = () => (S.libKind === 'videos' ? (SONG_SORTS.includes(S.libSort) ? 'title' : S.libSort) : VIDEO_SORTS.includes(S.libSort) ? 'title' : S.libSort);
+// where a card video was left on the Rondo ({atText, leftText, lastPlayed}), undefined: not started
+const watchingOf = (it) => S.watching && S.watching.get(it.path);
 const stars = (n) => '★'.repeat(n) + '☆'.repeat(5 - n);
 function dateGroup(ms) {
   if (!ms) return t('library.group.earlier');
@@ -904,6 +912,7 @@ function buildRows() {
   // the listening sorts show only what has been listened to (rated)
   if (sort === 'plays' || sort === 'played') items = items.filter((x) => x.plays > 0);
   if (sort === 'rating') items = items.filter((x) => x.rating > 0);
+  if (sort === 'watching') items = items.filter((x) => watchingOf(x));
   const byTitle = (a, b) => collator.compare(a.title || fileName(a.path), b.title || fileName(b.path));
   const emptyLast = (a, b) => (!a) - (!b) || collator.compare(a, b);
   const cmp = {
@@ -917,6 +926,7 @@ function buildRows() {
     plays: (a, b) => b.plays - a.plays || b.lastPlayed - a.lastPlayed || byTitle(a, b),
     played: (a, b) => b.lastPlayed - a.lastPlayed || byTitle(a, b),
     rating: (a, b) => b.rating - a.rating || b.plays - a.plays || byTitle(a, b),
+    watching: (a, b) => watchingOf(b).lastPlayed - watchingOf(a).lastPlayed || byTitle(a, b),
   }[sort];
   items.sort(cmp);
   const rows = [];
@@ -981,7 +991,7 @@ function renderLibrary() {
     return renderPlaylists();
   }
   const sel = $('#libSort');
-  for (const o of sel.options) o.hidden = videos && SONG_SORTS.includes(o.value);
+  for (const o of sel.options) o.hidden = videos ? SONG_SORTS.includes(o.value) : VIDEO_SORTS.includes(o.value);
   sel.value = sortKey();
   $$('#libHead [data-sort]').forEach((b) => (b.dataset.sort === sortKey() ? b.setAttribute('aria-sort', 'ascending') : b.removeAttribute('aria-sort')));
   libList.setAttribute('aria-label', videos ? t('library.videos') : t('library.songs'));
@@ -999,8 +1009,9 @@ function renderLibrary() {
   // the listening sorts with nothing listened to (or rated) yet
   const LISTENING = { plays: [t('library.nothingPlayed'), t('library.nothingPlayedText')],
     played: [t('library.nothingPlayed'), t('library.nothingPlayedText')],
-    rating: [t('library.nothingRated'), t('library.nothingRatedText')] };
-  if (!count && total && !S.libQuery.trim() && LISTENING[sortKey()] && !videos) {
+    rating: [t('library.nothingRated'), t('library.nothingRatedText')],
+    watching: [t('library.nothingWatching'), t('library.nothingWatchingText')] };
+  if (!count && total && !S.libQuery.trim() && LISTENING[sortKey()] && (!videos || sortKey() === 'watching')) {
     const [h, p] = LISTENING[sortKey()];
     libList.innerHTML = `<div class="lib-empty"><h3>${esc(h)}</h3><p>${esc(p)}</p></div>`;
     return;
@@ -1048,7 +1059,7 @@ function rowHtml(r) {
   if (r._video) {
     return `<div class="song is-video${isPlaying(r) ? ' is-playing' : ''}" role="listitem" data-path="${esc(r.path)}">
       <span class="art" data-art="${esc(r.path)}">${icon('film')}</span>
-      <span class="s-main"><span class="s-title">${esc(title)}</span><span class="s-sub">${fmtBytes(r.size)}</span></span>
+      <span class="s-main"><span class="s-title">${esc(title)}</span><span class="s-sub">${esc(watchingOf(r)?.leftText || fmtBytes(r.size))}</span></span>
       <span class="s-size">${fmtBytes(r.size)}</span>
       <span class="s-time">${fmtDur(r.durationSec)}</span>${acts}</div>`;
   }
@@ -1116,7 +1127,9 @@ function loadArtInto(el, size, counted = false) {
     }, ART_RETRY_MS[tries - 1]);
   };
   // a picture on the card (a playlist's cover) comes as a photo; a song's or a video's art from it
-  img.src = el.dataset.photo ? withTry(photoUrl(el.dataset.art, size), el._artTries || 0) : artUrl(el.dataset.art, size, el._artTries || 0);
+  // a podcast's or an episode's picture: YouTube's, through the Rondo (GET /api/thumb)
+  img.src = el.dataset.thumb ? withTry(`/api/thumb?path=${encodeURIComponent(el.dataset.thumb)}`, el._artTries || 0)
+    : el.dataset.photo ? withTry(photoUrl(el.dataset.art, size), el._artTries || 0) : artUrl(el.dataset.art, size, el._artTries || 0);
 }
 
 libList.addEventListener('click', (e) => {
@@ -1221,8 +1234,10 @@ function confirmSheet({ title, text, action, danger = true }) {
 }
 function openItem(it) {
   const video = !!it._video, title = it.title || fileName(it.path);
+  const w = video ? watchingOf(it) : undefined;
   const facts = video
-    ? [[t('library.details.length'), fmtDur(it.durationSec)], [t('library.details.size'), fmtBytes(it.size)], [t('library.details.file'), it.path, 'path']]
+    ? [[t('library.details.length'), fmtDur(it.durationSec)], [t('library.details.place'), w ? [w.atText, w.leftText].filter(Boolean).join(' · ') : ''],
+      [t('library.details.size'), fmtBytes(it.size)], [t('library.details.file'), it.path, 'path']]
     : [[t('library.sort.artist'), it.artist], [t('library.sort.albumArtist'), it.albumArtist && it.albumArtist !== it.artist ? it.albumArtist : ''], [t('library.sort.album'), it.album],
       [t('library.details.disc'), it.disc || ''], [t('library.details.track'), it.track || ''], [t('library.sort.year'), it.year || ''], [t('library.sort.genre'), it.genre || ''], [t('library.details.length'), fmtDur(it.durationSec)],
       [t('library.details.played'), it.plays ? t('library.details.playedTimes', { count: it.plays, date: new Date(it.lastPlayed).toLocaleDateString(dateLocale(), { dateStyle: 'medium' }) }) : t('library.details.never')],
@@ -1232,7 +1247,7 @@ function openItem(it) {
       <div><h2>${esc(title)}</h2><p>${esc(video ? t('library.details.videoOnCard') : [it.artist, it.album].filter(Boolean).join(' · ') || t('common.onCard'))}</p></div></div>
       ${video ? '' : `<div class="rate" role="radiogroup" aria-label="${te('library.sort.rating')}">${[1, 2, 3, 4, 5].map((n) => `<button type="button" role="radio" aria-checked="${n === it.rating}" aria-label="${te('library.details.stars', { count: n })}" data-rate="${n}" class="${n <= it.rating ? 'on' : ''}">★</button>`).join('')}</div>`}
       <dl class="facts">${facts.filter((f) => f[1] !== '' && f[1] != null).map(([k, v, c]) => `<dt>${esc(k)}</dt><dd${c ? ` class="${c}"` : ''}>${esc(v)}</dd>`).join('')}</dl>
-      <div class="sheet-actions"><button class="btn btn-red-text" type="button" data-act="delete">${icon('trash')}<span>${te('common.delete')}</span></button>${video ? '' : `<button class="btn" type="button" data-act="playlist">${icon('playlist')}<span>${te('library.details.addToPlaylist')}</span></button>`}${video ? '' : `<button class="btn btn-primary" type="button" data-act="play">${icon('play')}<span>${te('common.playOnRondo')}</span></button>`}</div>`);
+      <div class="sheet-actions"><button class="btn btn-red-text" type="button" data-act="delete">${icon('trash')}<span>${te('common.delete')}</span></button>${w ? `<button class="btn" type="button" data-act="again">${icon('refresh')}<span>${te('library.details.startAgain')}</span></button>` : ''}${video ? '' : `<button class="btn" type="button" data-act="playlist">${icon('playlist')}<span>${te('library.details.addToPlaylist')}</span></button>`}${video ? '' : `<button class="btn btn-primary" type="button" data-act="play">${icon('play')}<span>${te('common.playOnRondo')}</span></button>`}</div>`);
     const art = $('.art[data-art]', sheet);
     if (art) loadArtInto(art, 240);
     ($('[data-act="play"]', sheet) || $('[data-act="delete"]', sheet)).focus();
@@ -1260,6 +1275,19 @@ function openItem(it) {
     const act = b.dataset.act;
     if (act === 'play') { b.disabled = true; if (await playItem(it)) sheet.close(); else b.disabled = false; }
     if (act === 'playlist') { sheet.removeEventListener('click', onClick); return addToPlaylistSheet(it); }
+    if (act === 'again') {  // its place on the Rondo forgotten: it opens at its start there
+      b.disabled = true;
+      try {
+        await api('POST', '/api/videos/again', { path: it.path });
+        S.watching.delete(it.path);
+        sheet.close();
+        renderLibrary();
+        toast(t('library.details.startsAgain', { name: title }));
+      } catch (e2) {
+        b.disabled = false;
+        if (e2.status !== 401) toast(t('common.didntWork', { reason: reason(e2) }));
+      }
+    }
     if (act === 'delete') confirm();
     if (act === 'back') detail();
     if (act === 'really') {
@@ -1693,6 +1721,694 @@ $('#bookFolder').addEventListener('change', (e) => {
   e.target.value = '';
 });
 
+// ---------- podcasts from their feeds (the Rondo's main menu › Podcasts: shell/rss.h) ----------
+// the shows subscribed to and the Rondo's lists (Continue listening, Episodes up next, New episodes,
+// Save for later, Downloaded), a search of Apple's directory (and Podcast Index's with a key), Apple's
+// charts, a show's page, a show added by its feed's address, OPML in and out. Above YouTube Music's.
+const R = { view: 'home', state: null, show: null, search: null, top: null, genre: 0, shown: 100, eps: new Map(), shows: new Map() };
+const rssBody = $('#rssBody');
+const RSS_GENRES = [[0, 'all'], [1301, 'arts'], [1321, 'business'], [1303, 'comedy'], [1304, 'education'], [1483, 'fiction'], [1511, 'government'],
+  [1512, 'health'], [1487, 'history'], [1305, 'kids'], [1502, 'leisure'], [1310, 'music'], [1489, 'news'], [1314, 'religion'], [1533, 'science'],
+  [1324, 'society'], [1545, 'sports'], [1318, 'technology'], [1488, 'trueCrime'], [1309, 'tv']];
+// a country's name in the page's language (the browser's own names)
+function countryName(code) {
+  try { return new Intl.DisplayNames([L.code], { type: 'region' }).of(code.toUpperCase()) || code.toUpperCase(); } catch { return code.toUpperCase(); }
+}
+async function rssLoad(quiet = false) {
+  if (!quiet && !R.state) rssBody.innerHTML = '<div class="lib-skel"></div>'.repeat(2);
+  try {
+    R.state = await api('GET', '/api/rss/state', undefined, { timeout: 20000 });
+  } catch (e) {
+    if (e.status === 401) return;
+    rssBody.innerHTML = `<div class="group"><div class="row-empty">${te('rss.couldntRead')} ${esc(reason(e))}</div></div>`;
+    return;
+  }
+  renderRss();
+  // an OPML file's shows being added, a check for new episodes: watched until they're done
+  if ((R.state.importing || R.state.checking) && !R.watch) R.watch = setTimeout(() => { R.watch = null; if (S.route === 'podcasts') rssLoad(true); }, 2500);
+}
+const rssDate = (s) => (s ? new Date(s * 1000).toLocaleDateString(dateLocale(), new Date(s * 1000).getFullYear() === new Date().getFullYear() ? { month: 'short', day: 'numeric' } : { dateStyle: 'medium' }) : '');
+const rssPct = (e) => (e.duration && e.positionMs ? Math.min(100, (e.positionMs / (e.duration * 1000)) * 100) : 0);
+function rssEpRowHtml(e, withShow, extra = '') {
+  R.eps.set(e.id, e);
+  const sub = [withShow ? e.showTitle : '', e.subtitle].filter(Boolean).join(' · ');
+  const pct = rssPct(e);
+  const mark = e.downloading !== undefined ? `<span class="pod-mark">${esc(t('rss.downloadingPct', { pct: e.downloading }))}</span>` : e.onCard ? `<span class="pod-mark">${te('rss.onCard')}</span>` : '';
+  return `<div class="song ep-row${e.playing ? ' is-playing' : ''}${withShow ? '' : ' no-art'}" role="listitem" data-rep="${esc(e.id)}">
+    ${withShow ? `<span class="art" data-thumb="${esc(e.art || '')}">${icon('podcast')}</span>` : ''}
+    <span class="s-main"><span class="s-title">${esc(e.title)}${e.new ? `<span class="bk-dot" title="${te('podcasts.notStarted')}"></span>` : ''}</span><span class="s-sub">${esc(sub)}</span>${pct && !e.played ? `<span class="bk-prog"><span style="--p:${pct.toFixed(1)}%"></span></span>` : ''}</span>
+    <span class="s-acts">${mark}${extra}<button class="ib ib-sm" type="button" data-act="rep-play" aria-label="${te('common.playNameOnRondo', { name: e.title })}">${icon('play')}</button><button class="ib ib-sm" type="button" data-act="rep-more" aria-label="${te('podcasts.optionsFor', { name: e.title })}">${icon('more')}</button></span></div>`;
+}
+function rssShowSub(s) {
+  const parts = [];
+  if (s.newCount) parts.push(t('rss.newCount', { count: s.newCount }));
+  else if (s.author) parts.push(s.author);
+  if (s.updated) parts.push(t('rss.updated', { date: rssDate(s.updated) }));
+  if (!s.subscribed && s.count) parts.push(t('podcasts.episodeCount', { count: s.count }));
+  return parts.join(' · ');
+}
+function rssShowRowHtml(s, rank) {
+  R.shows.set(s.id, s);
+  const subscribed = s.subscribed || (R.state?.shows || []).some((x) => x.id === s.id);
+  return `<div class="song show-row" role="listitem" data-rshow="${esc(s.id)}">
+    <span class="art" data-thumb="${esc(s.thumb || '')}">${icon('podcast')}</span>
+    <span class="s-main"><span class="s-title">${rank ? `<span class="pod-rank">${rank}</span>` : ''}${esc(s.title || s.feed)}</span><span class="s-sub">${esc(rssShowSub({ ...s, subscribed }))}</span></span>
+    <span class="s-acts">${subscribed ? `<span class="pod-mark">${te('rss.subscribed')}</span>` : `<button class="btn btn-sm" type="button" data-act="rshow-sub">${icon('plus')}<span>${te('rss.subscribe')}</span></button>`}<button class="ib ib-sm" type="button" data-act="rshow-open" aria-label="${te('podcasts.openName', { name: s.title })}">${icon('chevron')}</button></span></div>`;
+}
+const rssBack = () => `<button class="btn btn-sm btn-quiet" type="button" data-act="rss-back">${icon('chevron', 'i flip')}<span>${te('podcasts.title')}</span></button>`;
+const rssSec = (title, count, rows, empty = '', head = '') => `<div class="lib pod-sec">${title ? `<div class="lhdr" role="heading" aria-level="3">${esc(title)}${count ? `<small>${esc(count)}</small>` : ''}${head}</div>` : ''}<div class="lib-list" role="list">${rows || (empty ? `<div class="lib-empty"><p>${esc(empty)}</p></div>` : '')}</div></div>`;
+function rssSearchForm() {
+  return `<form class="pod-search" id="rssSearch"><label class="search">${icon('search')}<span class="sr-only">${te('rss.searchShows')}</span>
+      <input type="search" name="q" placeholder="${te('rss.searchPlaceholder')}" autocomplete="off" enterkeyhint="search" value="${esc(R.search?.q || '')}"></label>
+      <button class="btn btn-primary" type="submit">${te('podcasts.searchButton')}</button></form>`;
+}
+function renderRss() {
+  if (!R.state) return;
+  const st = R.state;
+  let h = '';
+  if (R.view === 'show') h = rssShowHtml();
+  else if (R.view === 'search') {
+    const s = R.search;
+    h = rssBack() + rssSearchForm() + (s.loading ? rssSec('', '', '<div class="lib-skel"></div>'.repeat(3))
+      : rssSec(t('podcasts.shows'), s.items.length ? t('podcasts.showCount', { count: s.items.length }) : '', s.items.map((x) => rssShowRowHtml(x)).join(''), s.error ? `${t('rss.couldntSearch')} ${reason(s.error)}` : t('podcasts.nothingFound', { query: s.q })));
+  } else if (R.view === 'top') {
+    const g = RSS_GENRES.map(([id, key]) => `<option value="${id}"${id === R.genre ? ' selected' : ''}>${esc(t('rss.genre.' + key))}</option>`).join('');
+    const top = R.top;
+    h = rssBack() + `<div class="pod-tools"><h2 class="pod-h">${te('rss.topIn', { country: countryName(st.country) })}</h2><label class="select"><span class="sr-only">${te('rss.category')}</span><select data-act="rss-genre" aria-label="${te('rss.category')}">${g}</select>${icon('down')}</label></div>` +
+      (top.loading ? rssSec('', '', '<div class="lib-skel"></div>'.repeat(3)) : rssSec('', '', top.items.map((x, i) => rssShowRowHtml(x, i + 1)).join(''), top.error ? `${t('rss.couldntCharts')} ${reason(top.error)}` : t('rss.nothingCharts')));
+  } else {
+    const countries = (st.countries || [st.country]).map((c) => [c, countryName(c)]).sort((a, b) => a[1].localeCompare(b[1], L.code));
+    const tools = `<div class="pod-tools">
+        <button class="btn" type="button" data-act="rss-top">${icon('flame')}<span>${te('rss.topIn', { country: countryName(st.country) })}</span></button>
+        <button class="btn" type="button" data-act="rss-add">${icon('plus')}<span>${te('rss.addByAddress')}</span></button>
+        <button class="btn" type="button" data-act="rss-import">${icon('upload')}<span>${te('rss.importOpml')}</span></button>
+        <button class="btn" type="button" data-act="rss-export"${st.shows.length ? '' : ' disabled'}>${icon('download')}<span>${te('rss.exportOpml')}</span></button>
+        <label class="select"><span class="sr-only">${te('rss.country')}</span><select data-act="rss-country" aria-label="${te('rss.country')}">${countries.map(([c, n]) => `<option value="${c}"${c === st.country ? ' selected' : ''}>${esc(n)}</option>`).join('')}</select>${icon('down')}</label></div>`;
+    const busy = st.importing && st.importProgress ? `<p class="pod-note">${te('rss.importing', { done: st.importProgress.done, total: st.importProgress.total })}</p>`
+      : st.imported && R.importAsked ? `<p class="pod-note">${te('rss.imported', { added: st.imported.added, already: st.imported.already, failed: st.imported.failed })}</p>` : '';
+    const look = `<button class="btn btn-sm btn-quiet" type="button" data-act="rss-check"${st.checking ? ' disabled' : ''}>${icon('refresh')}<span>${te(st.checking ? 'rss.checking' : 'rss.checkNow')}</span></button>`;
+    const key = st.server ? `<p class="pod-note">${te('rss.keyOnServer')}</p>`
+      : `<form class="lib pod-sec pod-key" id="rssKey"><div class="lhdr" role="heading" aria-level="3">${te('rss.keyTitle')}${st.ownKey ? `<small>${te('rss.keySet')}</small>` : ''}</div>
+        <p>${th('rss.keyText', { link: html(`<a href="https://api.podcastindex.org/signup" target="_blank" rel="noopener">api.podcastindex.org</a>`) })}</p>
+        <div class="pod-key-row"><input name="key" autocomplete="off" spellcheck="false" placeholder="${te('rss.keyKey')}" aria-label="${te('rss.keyKey')}"><input name="secret" type="password" autocomplete="off" placeholder="${te('rss.keySecret')}" aria-label="${te('rss.keySecret')}">
+        <button class="btn btn-primary" type="submit">${te('common.save')}</button>${st.ownKey ? `<button class="btn btn-red-text" type="button" data-act="rss-key-clear">${te('rss.keyRemove')}</button>` : ''}</div></form>`;
+    h = rssSearchForm() + tools + busy +
+      (st.inProgress.length ? rssSec(t('podcasts.continue'), '', st.inProgress.map((e) => rssEpRowHtml(e, true)).join('')) : '') +
+      (st.upNext.length ? rssSec(t('podcasts.upNext'), '', st.upNext.map((e) => rssEpRowHtml(e, true, `<button class="ib ib-sm" type="button" data-act="rep-unqueue" aria-label="${te('podcasts.takeOffName', { name: e.title })}">${icon('close')}</button>`)).join('')) : '') +
+      rssSec(t('podcasts.newEpisodes'), st.newEpisodes.length ? t('rss.newCount', { count: st.newEpisodes.length }) : '', st.newEpisodes.map((e) => rssEpRowHtml(e, true)).join(''), st.shows.length ? t('rss.newNone') : t('rss.newNoShows'), look) +
+      rssSec(t('podcasts.yourShows'), st.shows.length ? t('podcasts.showCount', { count: st.shows.length }) : '', st.shows.map((s) => rssShowRowHtml(s)).join(''), t('rss.noShows')) +
+      (st.later.length ? rssSec(t('podcasts.saveForLater'), t('podcasts.episodeCount', { count: st.later.length }), st.later.map((e) => rssEpRowHtml(e, true)).join('')) : '') +
+      rssSec(t('podcasts.downloaded'), st.downloaded.length ? t('podcasts.episodeCount', { count: st.downloaded.length }) : '', st.downloaded.map((e) => rssEpRowHtml(e, true)).join(''), t('rss.downloadedNone')) +
+      key;
+  }
+  rssBody.innerHTML = h;
+  $$('.art[data-thumb]:not([data-q])', rssBody).forEach((el) => { if (!el.dataset.thumb) return; el.dataset.q = '1'; artIO.observe(el); });
+  podLayout();
+}
+function rssShowHtml() {
+  const p = R.show;
+  if (!p || p.loading) return `${rssBack()}<div class="lib-skel"></div><div class="lib-skel"></div>`;
+  if (p.error) return `${rssBack()}<div class="group"><div class="row-empty">${esc(p.error)}</div></div>`;
+  const s = p.show;
+  const speeds = POD_SPEEDS.map((v) => `<option value="${v}"${v === s.speed ? ' selected' : ''}>${esc(v === 100 ? t('podcasts.speedNormal', { speed: podSpeedText(v) }) : podSpeedText(v))}</option>`).join('');
+  const sub = `<button class="btn btn-sm${s.subscribed ? '' : ' btn-primary'}" type="button" data-act="rss-sub">${icon(s.subscribed ? 'check' : 'plus')}<span>${te(s.subscribed ? 'rss.subscribed' : 'rss.subscribe')}</span></button>`;
+  const auto = s.subscribed ? `<div class="pod-auto"><label class="check"><input type="checkbox" data-act="rss-auto-on"${s.auto.on ? ' checked' : ''}><span>${te('rss.autoDownload')}</span></label>
+      ${s.auto.on ? `<label class="select"><span class="sr-only">${te('rss.keep')}</span><select data-act="rss-auto-keep" aria-label="${te('rss.keep')}">${[1, 2, 3, 5, 10].map((k) => `<option value="${k}"${k === s.auto.keep ? ' selected' : ''}>${esc(t('rss.keepLatest', { count: k }))}</option>`).join('')}</select>${icon('down')}</label>
+      <label class="check"><input type="checkbox" data-act="rss-auto-del"${s.auto.deletePlayed ? ' checked' : ''}><span>${te('rss.deletePlayed')}</span></label>` : `<small>${te('rss.autoHint')}</small>`}</div>` : '';
+  const eps = p.episodes.slice(0, R.shown);
+  return `<div class="lib pod-sec"><div class="pl-head bk-head">
+      <span style="grid-column:1/-1;justify-self:start">${rssBack()}</span>
+      <span class="art bk-cover" data-thumb="${esc(s.thumb || '')}">${icon('podcast')}</span>
+      <div><h2>${esc(s.title || s.feed)}</h2><p>${esc([s.author, s.genre, t('podcasts.episodeCount', { count: p.episodes.length })].filter(Boolean).join(' · '))}</p>${s.description ? `<p class="pod-desc">${esc(s.description)}</p>` : ''}</div>
+      <div class="pl-acts bk-acts">${sub}<label class="select"><span class="sr-only">${te('podcasts.speed')}</span><select data-act="rss-speed" aria-label="${te('podcasts.speedFor', { name: s.title })}">${speeds}</select>${icon('down')}</label></div></div>${auto}` +
+    `<div class="lhdr" role="heading" aria-level="3">${te(s.serial ? 'rss.episodesInOrder' : 'podcasts.episodes')}</div><div class="lib-list" role="list">${eps.length ? eps.map((e) => rssEpRowHtml(e, false)).join('') : `<div class="lib-empty"><p>${te('podcasts.noEpisodes')}</p></div>`}</div></div>` +
+    (p.episodes.length > R.shown ? `<div class="pod-more"><button class="btn btn-sm" type="button" data-act="rss-more">${te('podcasts.showMore')}</button></div>` : '');
+}
+async function rssOpenShow(s) {
+  R.prev = R.view;
+  R.view = 'show';
+  R.shown = 100;
+  R.show = { loading: true };
+  renderRss();
+  window.scrollTo({ top: 0 });
+  const q = new URLSearchParams({ feed: s.feed });
+  if (s.private) q.set('private', '1');
+  if (s.art) q.set('art', s.art);
+  if (s.genre) q.set('genre', s.genre);
+  if (s.apple) q.set('apple', String(s.apple));
+  try {
+    R.show = await api('GET', `/api/rss/show?${q}`, undefined, { timeout: 190000 });
+  } catch (e) {
+    if (e.status === 401) return;
+    R.show = { error: e.code === 'not_feed' ? t('rss.notFeed') : `${t('rss.couldntRead')} ${reason(e)}` };
+  }
+  if (R.view === 'show') renderRss();
+}
+async function rssSearch(q) {
+  R.view = 'search';
+  R.search = { q, items: [], loading: true };
+  renderRss();
+  try {
+    const res = await api('GET', `/api/rss/search?q=${encodeURIComponent(q)}`, undefined, { timeout: 45000 });
+    R.search = { q, items: res.items || [] };
+  } catch (e) {
+    if (e.status === 401) return;
+    R.search = { q, items: [], error: e };
+  }
+  if (R.view === 'search') renderRss();
+}
+async function rssTop() {
+  R.view = 'top';
+  R.top = { items: [], loading: true };
+  renderRss();
+  try {
+    const res = await api('GET', `/api/rss/top${R.genre ? `?genre=${R.genre}` : ''}`, undefined, { timeout: 45000 });
+    R.top = { items: res.items || [] };
+  } catch (e) {
+    if (e.status === 401) return;
+    R.top = { items: [], error: e };
+  }
+  if (R.view === 'top') renderRss();
+}
+// what's done, the page brought up to date (the Rondo's state, an episode's marks)
+async function rssAct(method, path, body, done) {
+  try {
+    const res = await api(method, path, body, { timeout: 190000 });
+    if (res?.player !== undefined && S.status) { S.status.player = res.player; S.statusAt = performance.now(); renderMini(); }
+    if (res?.state) R.state = { ...R.state, ...res.state };
+    else if (res?.shows && res?.newEpisodes) R.state = { ...R.state, ...res };
+    if (res?.episode && R.show?.episodes) {
+      const at = R.show.episodes.findIndex((x) => x.id === res.episode.id);
+      if (at >= 0) R.show.episodes[at] = { ...R.show.episodes[at], ...res.episode };
+    }
+    if (done) toast(done);
+    renderRss();
+    return res;
+  } catch (e) {
+    if (e.status !== 401) toast(e.code === 'not_feed' ? t('rss.notFeed') : e.code === 'offline' ? t('rss.offline') : t('podcasts.couldntDo', { reason: reason(e) }), 'err');
+    return null;
+  }
+}
+function rssEpSheet(e) {
+  const b = (act, ic, label, cls = '') => `<button class="btn${cls}" type="button" data-act="${act}">${icon(ic)}<span>${esc(label)}</span></button>`;
+  const onShowPage = R.view === 'show' && R.show?.show?.id === e.show;
+  openSheet(`<div class="song-sheet"><span class="art" data-thumb="${esc(e.art || '')}">${icon('podcast')}</span>
+      <div><h2>${esc(e.title)}</h2><p>${esc([e.showTitle, e.subtitle].filter(Boolean).join(' · '))}</p></div></div>
+      <div class="pod-acts">
+        ${b('rep-play', 'play', e.video ? t('rss.watchOnRondo') : e.positionMs && !e.played ? t('podcasts.resume') : t('podcasts.play'), ' btn-primary')}
+        ${e.video ? b('rep-listen', 'headphones', t('rss.listenOnly')) : ''}
+        ${e.positionMs || e.played ? b('rep-start', 'refresh', t('podcasts.startAgain')) : ''}
+        ${e.video ? '' : b('rep-next', 'queue', t('podcasts.playNext')) + b('rep-queue', 'plus', t('podcasts.addToQueue'))}
+        ${e.onCard ? b('rep-undownload', 'trash', t('podcasts.deleteDownload'), ' btn-red-text') : e.downloading !== undefined ? '' : b('rep-download', 'download', t('common.download'))}
+        ${b(e.later ? 'rep-unlater' : 'rep-later', 'clock', e.later ? t('rss.removeFromLater') : t('podcasts.saveForLater'))}
+        ${b('rep-played', 'check', e.played ? t('podcasts.markUnplayed') : t('podcasts.markPlayed'))}
+        ${b('rep-notes', 'info', t('rss.showNotes'))}
+        ${onShowPage ? '' : b('rep-show', 'podcast', t('rss.goToShow'))}
+      </div>`);
+  const art = $('.art[data-thumb]', sheet);
+  if (art?.dataset.thumb) loadArtInto(art, 240);
+  const onClick = async (ev) => {
+    const btn = ev.target.closest('[data-act]');
+    if (!btn) return;
+    sheet.removeEventListener('click', onClick);
+    sheet.close();
+    await rssEpAction(btn.dataset.act, e);
+  };
+  sheet.addEventListener('click', onClick);
+  sheet.addEventListener('close', () => sheet.removeEventListener('click', onClick), { once: true });
+}
+async function rssNotes(e) {
+  const show = (R.state?.shows || []).find((s) => s.id === e.show) || R.shows.get(e.show) || R.show?.show;
+  openSheet(`<h2>${esc(e.title)}</h2><p class="pod-notes">${te('podcasts.loading')}</p><div class="sheet-actions"><button class="btn" type="button" data-r="0">${te('common.close')}</button></div>`);
+  $('[data-r="0"]', sheet).addEventListener('click', () => sheet.close());
+  try {
+    const res = await api('GET', `/api/rss/notes?feed=${encodeURIComponent(show?.feed || '')}&guid=${encodeURIComponent(e.guid)}`, undefined, { timeout: 25000 });
+    const p = $('.pod-notes', sheet);
+    if (p) p.textContent = res.notes || t('rss.noNotes');
+  } catch (err) {
+    const p = $('.pod-notes', sheet);
+    if (p && err.status !== 401) p.textContent = `${t('rss.couldntRead')} ${reason(err)}`;
+  }
+}
+async function rssEpAction(act, e) {
+  const ep = { episode: e };
+  if (act === 'rep-play') return rssAct('POST', '/api/rss/play', ep, e.video ? t('rss.watching', { name: e.title }) : t('podcasts.playing', { name: e.title }));
+  if (act === 'rep-listen') return rssAct('POST', '/api/rss/play', { ...ep, from: 'listen' }, t('podcasts.playing', { name: e.title }));
+  if (act === 'rep-start') return rssAct('POST', '/api/rss/play', { ...ep, from: 'start' }, t('podcasts.playing', { name: e.title }));
+  if (act === 'rep-next' || act === 'rep-queue') return rssAct('POST', '/api/rss/queue', { ...ep, next: act === 'rep-next' }, t('podcasts.queued', { name: e.title }));
+  if (act === 'rep-download') return rssAct('POST', '/api/rss/download', ep, t('podcasts.downloading', { name: e.title }));
+  if (act === 'rep-undownload') {
+    if (!(await confirmSheet({ title: t('podcasts.deleteDownload'), text: te('podcasts.deleteText', { title: e.title }), action: t('common.delete') }))) return;
+    return rssAct('DELETE', `/api/rss/download?id=${encodeURIComponent(e.id)}`, undefined, t('podcasts.deletedFromCard'));
+  }
+  if (act === 'rep-played') return rssAct('POST', '/api/rss/played', { ...ep, played: !e.played }, e.played ? t('podcasts.markedUnplayed') : t('podcasts.markedPlayed'));
+  if (act === 'rep-later' || act === 'rep-unlater') return rssAct('POST', '/api/rss/later', { ...ep, later: act === 'rep-later' }, act === 'rep-later' ? t('rss.addedToLater') : t('rss.removedFromLater'));
+  if (act === 'rep-notes') return rssNotes(e);
+  if (act === 'rep-show') {
+    const s = (R.state?.shows || []).find((x) => x.id === e.show) || R.shows.get(e.show);
+    if (s) return rssOpenShow(s);
+    return toast(t('rss.showUnknown'), 'err');
+  }
+  if (act === 'rep-unqueue') return rssAct('DELETE', `/api/rss/upnext?id=${encodeURIComponent(e.id)}`);
+}
+async function rssSubscribe(s) {
+  const res = await rssAct('POST', '/api/rss/subscribe', { feed: s.feed, art: s.art || '', genre: s.genre || '', apple: s.apple || 0, title: s.title || '' }, t('rss.subscribedTo', { name: s.title || s.feed }));
+  if (res?.show && R.show?.show?.id === res.show.id) { R.show.show = { ...R.show.show, ...res.show }; renderRss(); }
+}
+async function rssUnsubscribe(s) {
+  const has = (R.state?.downloaded || []).some((e) => e.show === s.id);
+  let del = false;
+  if (has) {
+    const choice = await new Promise((resolve) => {
+      openSheet(`<h2>${te('rss.unsubscribeName', { name: s.title })}</h2><p>${te('rss.unsubscribeText')}</p><div class="sheet-actions">
+        <button class="btn" type="button" data-r="cancel">${te('common.cancel')}</button><button class="btn" type="button" data-r="keep">${te('rss.keepDownloads')}</button><button class="btn btn-danger" type="button" data-r="delete">${te('rss.deleteDownloads')}</button></div>`);
+      const onClick = (ev) => { const b = ev.target.closest('[data-r]'); if (b) finish(b.dataset.r); };
+      const finish = (v) => { sheet.removeEventListener('click', onClick); sheet.removeEventListener('close', onClose); if (sheet.open) sheet.close(); resolve(v); };
+      const onClose = () => finish('cancel');
+      sheet.addEventListener('click', onClick);
+      sheet.addEventListener('close', onClose);
+    });
+    if (choice === 'cancel') return;
+    del = choice === 'delete';
+  }
+  const res = await rssAct('POST', '/api/rss/unsubscribe', { id: s.id, deleteDownloads: del }, t('rss.unsubscribedFrom', { name: s.title }));
+  if (res && R.show?.show?.id === s.id) { R.show.show.subscribed = false; renderRss(); }
+}
+// a feed's address (a private or paid feed has one of its own): read, then subscribed to
+function rssAddSheet() {
+  openSheet(`<h2>${te('rss.addByAddress')}</h2><p>${te('rss.addText')}</p><form class="sheet-form"><input type="url" maxlength="2000" placeholder="https://" aria-label="${te('rss.feedAddress')}" autocomplete="off" spellcheck="false"><div class="sheet-actions"><button class="btn" type="button" data-r="0">${te('common.cancel')}</button><button class="btn btn-primary" type="submit">${te('rss.add')}</button></div></form>`);
+  const input = $('input', sheet), form = $('form', sheet);
+  input.focus();
+  $('[data-r="0"]', sheet).addEventListener('click', () => sheet.close());
+  form.addEventListener('submit', async (ev) => {
+    ev.preventDefault();
+    const url = input.value.trim();
+    if (!/^https?:\/\/\S+$/i.test(url)) return input.classList.add('is-invalid');
+    const btn = $('[type=submit]', form);
+    btn.disabled = true;
+    btn.textContent = t('rss.reading');
+    try {
+      const res = await api('POST', '/api/rss/add', { url }, { timeout: 190000 });
+      sheet.close();
+      if (res?.state) R.state = { ...R.state, ...res.state };
+      toast(t('rss.subscribedTo', { name: res?.show?.title || url }));
+      renderRss();
+    } catch (e) {
+      btn.disabled = false;
+      btn.textContent = t('rss.add');
+      if (e.status !== 401) toast(e.code === 'not_feed' ? t('rss.notFeed') : e.code === 'offline' ? t('rss.offline') : `${t('rss.couldntRead')} ${reason(e)}`, 'err');
+    }
+  });
+}
+const opmlInput = Object.assign(document.createElement('input'), { type: 'file', accept: '.opml,.xml,text/xml,text/x-opml,application/xml', hidden: true });
+document.body.append(opmlInput);
+opmlInput.addEventListener('change', async () => {
+  const f = opmlInput.files[0];
+  opmlInput.value = '';
+  if (!f) return;
+  if (f.size > 2 * 1024 * 1024) return toast(t('rss.opmlTooBig'), 'err');
+  const text = await f.text();
+  try {
+    const headers = { 'Content-Type': 'text/xml' };
+    if (S.session) headers['X-Rondo-Session'] = S.session;
+    const res = await fetch('/api/rss/opml', { method: 'POST', headers, body: text, credentials: 'same-origin' });
+    const data = await res.json().catch(() => null);
+    if (res.status === 401) return needPair();
+    if (!res.ok) return toast(data?.error === 'no_feeds' ? t('rss.opmlNone') : data?.error === 'importing' ? t('rss.opmlBusy') : t('podcasts.couldntDo', { reason: data?.error || res.status }), 'err');
+    R.importAsked = true;
+    if (data?.state) R.state = { ...R.state, ...data.state };
+    toast(t('rss.opmlStarted', { count: data?.feeds || 0 }));
+    renderRss();
+    rssLoad(true);
+  } catch {
+    toast(t('rss.offline'), 'err');
+  }
+});
+async function rssExport() {
+  try {
+    const headers = {};
+    if (S.session) headers['X-Rondo-Session'] = S.session;
+    const res = await fetch('/api/rss/opml', { headers, credentials: 'same-origin', cache: 'no-store' });
+    if (res.status === 401) return needPair();
+    if (!res.ok) throw new Error(String(res.status));
+    const url = URL.createObjectURL(await res.blob());
+    const a = Object.assign(document.createElement('a'), { href: url, download: 'rondo-podcasts.opml' });
+    document.body.append(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 10000);
+  } catch (e) {
+    toast(t('podcasts.couldntDo', { reason: reason(e) }), 'err');
+  }
+}
+rssBody.addEventListener('submit', async (ev) => {
+  if (ev.target.id === 'rssSearch') {
+    ev.preventDefault();
+    const q = new FormData(ev.target).get('q')?.toString().trim();
+    if (q) rssSearch(q);
+    return;
+  }
+  if (ev.target.id === 'rssKey') {
+    ev.preventDefault();
+    const f = new FormData(ev.target);
+    const key = f.get('key')?.toString().trim(), secret = f.get('secret')?.toString().trim();
+    if (!key || !secret) return toast(t('rss.keyBoth'), 'err');
+    try { await api('PUT', '/api/rss/key', { key, secret }); toast(t('rss.keySaved')); rssLoad(true); }
+    catch (e) { if (e.status !== 401) toast(t('podcasts.couldntDo', { reason: reason(e) }), 'err'); }
+  }
+});
+rssBody.addEventListener('click', async (ev) => {
+  const act = ev.target.closest('[data-act]')?.dataset.act;
+  if (act === 'rss-back') { R.view = R.view === 'show' && R.prev && R.prev !== 'show' && R.prev !== 'home' ? R.prev : 'home'; R.prev = null; return R.view === 'home' ? rssLoad(true) : renderRss(); }
+  if (act === 'rss-top') return rssTop();
+  if (act === 'rss-add') return rssAddSheet();
+  if (act === 'rss-import') return opmlInput.click();
+  if (act === 'rss-export') return rssExport();
+  if (act === 'rss-check') { await rssAct('POST', '/api/rss/check'); return rssLoad(true); }
+  if (act === 'rss-more') { const y = window.scrollY; R.shown += 200; renderRss(); return window.scrollTo({ top: y }); }
+  if (act === 'rss-key-clear') {
+    try { await api('PUT', '/api/rss/key', { key: '', secret: '' }); toast(t('rss.keyRemoved')); rssLoad(true); }
+    catch (e) { if (e.status !== 401) toast(t('podcasts.couldntDo', { reason: reason(e) }), 'err'); }
+    return;
+  }
+  if (act === 'rss-sub' && R.show?.show) return R.show.show.subscribed ? rssUnsubscribe(R.show.show) : rssSubscribe(R.show.show);
+  const showRow = ev.target.closest('[data-rshow]');
+  if (showRow) {
+    const s = R.shows.get(showRow.dataset.rshow);
+    if (!s) return;
+    if (act === 'rshow-sub') return rssSubscribe(s);
+    return rssOpenShow(s);
+  }
+  const row = ev.target.closest('[data-rep]');
+  if (!row) return;
+  const e = R.eps.get(row.dataset.rep);
+  if (!e) return;
+  if (act === 'rep-play' || act === 'rep-unqueue') return rssEpAction(act, e);
+  rssEpSheet(e);
+});
+rssBody.addEventListener('change', async (ev) => {
+  const el = ev.target.closest('[data-act]');
+  if (!el) return;
+  const act = el.dataset.act;
+  if (act === 'rss-country') { await rssAct('PUT', '/api/rss/country', { country: el.value }, t('rss.countrySet', { country: countryName(el.value) })); return; }
+  if (act === 'rss-genre') { R.genre = +el.value; return rssTop(); }
+  const s = R.show?.show;
+  if (!s) return;
+  if (act === 'rss-speed') {
+    try {
+      const res = await api('PUT', '/api/rss/speed', { id: s.id, speed: +el.value });
+      s.speed = res.speed;
+      toast(t('podcasts.speedSet', { speed: podSpeedText(res.speed), name: s.title }));
+    } catch (e) { if (e.status !== 401) toast(t('podcasts.couldntDo', { reason: reason(e) }), 'err'); }
+    return;
+  }
+  if (act === 'rss-auto-on' || act === 'rss-auto-keep' || act === 'rss-auto-del') {
+    const body = { id: s.id, on: act === 'rss-auto-on' ? el.checked : s.auto.on, keep: act === 'rss-auto-keep' ? +el.value : s.auto.keep, deletePlayed: act === 'rss-auto-del' ? el.checked : s.auto.deletePlayed };
+    try {
+      const res = await api('PUT', '/api/rss/auto', body);
+      R.show.show = { ...s, ...res };
+      if (act === 'rss-auto-on') toast(el.checked ? t('rss.autoOn', { name: s.title }) : t('rss.autoOff', { name: s.title }));
+      renderRss();
+    } catch (e) { if (e.status !== 401) toast(t('podcasts.couldntDo', { reason: reason(e) }), 'err'); }
+  }
+});
+// the page's two parts: a show's page, a search or the charts take the whole page
+function podLayout() {
+  const rssAway = R.view !== 'home', ytAway = POD.view !== 'home';
+  rssBody.hidden = ytAway;
+  $('#podYtHead').hidden = rssAway || ytAway;
+  podBody.hidden = rssAway;
+}
+
+// ---------- podcasts (YouTube Music › Podcasts on the Rondo: shell/podcasts.h) ----------
+// the Rondo's own (Continue listening, Episodes up next, on the card), then the account's (Episodes for
+// Later, New episodes, its shows), a show's page, a search; every episode with where the Rondo has it
+const POD_SPEEDS = [75, 100, 125, 150, 175, 200, 250, 300];
+const podSpeedText = (v) => `${new Intl.NumberFormat(L.code, { maximumFractionDigits: 2 }).format(v / 100)}×`;
+const POD = { view: 'home', state: null, library: null, libError: null, show: null, list: null, search: null };
+const podBody = $('#podBody');
+async function loadPodcasts(quiet = false) {
+  rssLoad(quiet);
+  if (!quiet && !POD.state) podBody.innerHTML = '<div class="lib-skel"></div>'.repeat(3);
+  try {
+    POD.state = await api('GET', '/api/podcasts/state');
+  } catch (e) {
+    if (e.status === 401) return;
+    podBody.innerHTML = `<div class="group"><div class="row-empty">${te('podcasts.couldntRead')} ${esc(reason(e))}</div></div>`;
+    return;
+  }
+  if (POD.state.signedIn) {
+    try {
+      POD.library = await api('GET', '/api/podcasts/library', undefined, { timeout: 45000 });
+      POD.libError = null;
+    } catch (e) {
+      if (e.status === 401) return;
+      POD.libError = e;
+    }
+  }
+  renderPodcasts();
+}
+const podPct = (e) => (e.lengthMs && e.positionMs ? Math.min(100, (e.positionMs / e.lengthMs) * 100) : e.progress > 0 && e.progress < 100 ? e.progress : 0);
+function epRowHtml(e, withShow, extra = '') {
+  const sub = [withShow ? e.show : '', e.subtitle].filter(Boolean).join(' · ');
+  const pct = podPct(e);
+  return `<div class="song ep-row${e.playing ? ' is-playing' : ''}" role="listitem" data-ep="${esc(e.id)}">
+    <span class="art" data-thumb="${esc(e.thumb || '')}">${icon('podcast')}</span>
+    <span class="s-main"><span class="s-title">${esc(e.title)}${e.new ? `<span class="bk-dot" title="${te('podcasts.notStarted')}"></span>` : ''}</span><span class="s-sub">${esc(sub)}</span>${pct && !e.played ? `<span class="bk-prog"><span style="--p:${pct.toFixed(1)}%"></span></span>` : ''}</span>
+    <span class="s-acts">${extra}<button class="ib ib-sm" type="button" data-act="ep-play" aria-label="${te('common.playNameOnRondo', { name: e.title })}">${icon('play')}</button><button class="ib ib-sm" type="button" data-act="ep-more" aria-label="${te('podcasts.optionsFor', { name: e.title })}">${icon('more')}</button></span></div>`;
+}
+const showRowHtml = (s) => `<div class="song show-row" role="listitem" data-show="${esc(s.id)}" data-title="${esc(s.title)}">
+    <span class="art" data-thumb="${esc(s.thumb || '')}">${icon('podcast')}</span>
+    <span class="s-main"><span class="s-title">${esc(s.title)}</span><span class="s-sub">${esc(s.subtitle || '')}</span></span>
+    <span class="s-acts"><button class="ib ib-sm" type="button" data-act="show-open" aria-label="${te('podcasts.openName', { name: s.title })}">${icon('chevron')}</button></span></div>`;
+const podHeader = (title, count) => `<div class="lhdr" role="heading" aria-level="3">${esc(title)}${count ? `<small>${esc(count)}</small>` : ''}</div>`;
+const podBack = () => `<button class="btn btn-sm btn-quiet" type="button" data-act="pod-back">${icon('chevron', 'i flip')}<span>${te('podcasts.title')}</span></button>`;
+const podMore = (next) => (next ? `<div class="pod-more"><button class="btn btn-sm" type="button" data-act="pod-more">${te('podcasts.showMore')}</button></div>` : '');
+function podEpisodes() {  // every episode on the page now, to find one by its id
+  const all = [...(POD.state?.inProgress || []), ...(POD.state?.upNext || []), ...(POD.state?.downloaded || [])];
+  if (POD.view === 'show') all.push(...(POD.show?.items || []));
+  if (POD.view === 'list') all.push(...(POD.list?.items || []));
+  if (POD.view === 'search') all.push(...(POD.search?.items || []));
+  return all;
+}
+function renderPodcasts() {
+  if (!POD.state) return loadPodcasts();
+  const search = `<form class="pod-search" id="podSearch"><label class="search">${icon('search')}<span class="sr-only">${te('podcasts.search')}</span>
+      <input type="search" name="q" placeholder="${te('podcasts.searchPlaceholder')}" autocomplete="off" enterkeyhint="search" value="${esc(POD.search?.q || '')}"></label>
+      <button class="btn btn-primary" type="submit">${te('podcasts.searchButton')}</button></form>`;
+  // a section: its heading and rows in one card, as Library's lists
+  const sec = (title, count, rows, empty = '') => `<div class="lib pod-sec">${title ? podHeader(title, count) : ''}<div class="lib-list" role="list">${rows || (empty ? `<div class="lib-empty"><p>${esc(empty)}</p></div>` : '')}</div></div>`;
+  let html = '';
+  if (POD.view === 'show') html = renderShow();
+  else if (POD.view === 'list') html = `${podBack()}<h2 class="pod-h">${esc(POD.list.title)}</h2>${sec('', '', POD.list.items.map((e) => epRowHtml(e, true)).join(''), POD.list.empty)}${podMore(POD.list.next)}`;
+  else if (POD.view === 'search') {
+    const s = POD.search;
+    html = `${podBack()}${search}${s.loading ? sec('', '', '<div class="lib-skel"></div>'.repeat(3)) : ''}${s.shows.length ? sec(t('podcasts.shows'), '', s.shows.map(showRowHtml).join('')) : ''}${s.items.length ? sec(t('podcasts.episodes'), '', s.items.map((e) => epRowHtml(e, true)).join('')) : ''}${!s.loading && !s.shows.length && !s.items.length ? sec('', '', '', t('podcasts.nothingFound', { query: s.q })) : ''}${podMore(s.next)}`;
+  } else {
+    const st = POD.state;
+    const lists = st.signedIn ? `<div class="group pod-sec">
+        <button class="row pod-list" type="button" data-list="later"><span class="tile t-later">${icon('clock')}</span><div class="row-main"><div class="row-title">${te('podcasts.later')}</div><div class="row-sub">${esc(countWords(POD.library?.later) || t('podcasts.laterRowHint'))}</div></div>${icon('chevron', 'chev')}</button>
+        <button class="row pod-list" type="button" data-list="new"><span class="tile t-newEpisodes">${icon('sparkle')}</span><div class="row-main"><div class="row-title">${te('podcasts.newEpisodes')}</div><div class="row-sub">${esc(countWords(POD.library?.latest) || t('podcasts.newRowHint'))}</div></div>${icon('chevron', 'chev')}</button></div>` : '';
+    const showsNote = !st.signedIn ? `${t('podcasts.signInForShows')}: ${t('podcasts.signInDashboard')}`
+      : POD.libError ? (POD.libError.code === 'no_cookies' ? t('podcasts.needCookies') : POD.libError.code === 'old_server' ? t('podcasts.needNewerServer') : t('podcasts.couldntRead') + ' ' + reason(POD.libError))
+      : POD.library && !(POD.library.shows || []).length ? `${t('podcasts.noShows')}: ${t('podcasts.noShowsHint')}` : '';
+    const showRows = st.signedIn && !POD.libError ? (POD.library ? (POD.library.shows || []).map(showRowHtml).join('') : '<div class="lib-skel"></div>') : '';
+    html = search +
+      (st.inProgress.length ? sec(t('podcasts.continue'), '', st.inProgress.map((e) => epRowHtml(e, true)).join('')) : '') +
+      (st.upNext.length ? sec(t('podcasts.upNext'), '', st.upNext.map((e) => epRowHtml(e, true, `<button class="ib ib-sm" type="button" data-act="ep-unqueue" aria-label="${te('podcasts.takeOffName', { name: e.title })}">${icon('close')}</button>`)).join('')) : '') +
+      lists +
+      sec(t('podcasts.downloaded'), st.downloaded.length ? t('podcasts.episodeCount', { count: st.downloaded.length }) : '', st.downloaded.map((e) => epRowHtml(e, true)).join(''), t('podcasts.downloadedNone')) +
+      sec(t('podcasts.yourShows'), POD.library?.shows?.length ? t('podcasts.showCount', { count: POD.library.shows.length }) : '', showRows, showsNote);
+  }
+  podBody.innerHTML = html;
+  $$('.art[data-thumb]:not([data-q])', podBody).forEach((el) => { if (!el.dataset.thumb) return; el.dataset.q = '1'; artIO.observe(el); });
+  podLayout();
+}
+// "Auto playlist • 12 episodes": its last part, the count (YouTube's words)
+const countWords = (s) => (s || '').split('•').pop().trim();
+function renderShow() {
+  const p = POD.show;
+  if (!p || p.loading) return `${podBack()}<div class="lib-skel"></div><div class="lib-skel"></div>`;
+  const speeds = POD_SPEEDS.map((v) => `<option value="${v}"${v === p.speed ? ' selected' : ''}>${esc(v === 100 ? t('podcasts.speedNormal', { speed: podSpeedText(v) }) : podSpeedText(v))}</option>`).join('');
+  const save = p.saved === undefined ? '' : `<button class="btn btn-sm${p.saved ? '' : ' btn-primary'}" type="button" data-act="show-save">${icon(p.saved ? 'check' : 'plus')}<span>${te(p.saved ? 'podcasts.savedToLibrary' : 'podcasts.saveToLibrary')}</span></button>`;
+  return `<div class="lib pod-sec"><div class="pl-head bk-head">
+      <span style="grid-column:1/-1;justify-self:start">${podBack()}</span>
+      <span class="art bk-cover" data-thumb="${esc(p.thumb || '')}">${icon('podcast')}</span>
+      <div><h2>${esc(p.title)}</h2><p>${esc(p.subtitle || '')}</p>${p.description ? `<p class="pod-desc">${esc(p.description)}</p>` : ''}</div>
+      <div class="pl-acts bk-acts">${save}<label class="select"><span class="sr-only">${te('podcasts.speed')}</span><select data-act="show-speed" aria-label="${te('podcasts.speedFor', { name: p.title })}">${speeds}</select>${icon('down')}</label></div></div>` +
+    podHeader(t('podcasts.episodes')) + `<div class="lib-list" role="list">${p.items.length ? p.items.map((e) => epRowHtml(e, false)).join('') : `<div class="lib-empty"><p>${te('podcasts.noEpisodes')}</p></div>`}</div></div>${podMore(p.next)}`;
+}
+async function openShow(id, title) {
+  POD.view = 'show';
+  POD.show = { id, title, loading: true, items: [] };
+  renderPodcasts();
+  window.scrollTo({ top: 0 });
+  try {
+    const res = await api('GET', `/api/podcasts/show?id=${encodeURIComponent(id)}`, undefined, { timeout: 45000 });
+    POD.show = { id, ...res };
+  } catch (e) {
+    if (e.status === 401) return;
+    POD.show = { id, title, items: [], subtitle: e.code === 'old_server' ? t('podcasts.needNewerServer') : `${t('podcasts.couldntRead')} ${reason(e)}` };
+  }
+  renderPodcasts();
+}
+async function openList(which) {
+  const title = which === 'later' ? t('podcasts.later') : t('podcasts.newEpisodes');
+  POD.view = 'list';
+  POD.list = { which, title, items: [], empty: t('podcasts.loading') };
+  renderPodcasts();
+  try {
+    const res = await api('GET', `/api/podcasts/list?which=${which}`, undefined, { timeout: 45000 });
+    POD.list = { which, title, items: res.items || [], next: res.next, empty: which === 'later' ? t('podcasts.laterNone') : t('podcasts.newNone') };
+  } catch (e) {
+    if (e.status === 401) return;
+    POD.list.empty = `${t('podcasts.couldntRead')} ${reason(e)}`;
+  }
+  renderPodcasts();
+}
+async function podSearch(q) {
+  POD.view = 'search';
+  POD.search = { q, shows: [], items: [], loading: true };
+  renderPodcasts();
+  try {
+    const [shows, eps] = await Promise.all([
+      api('GET', `/api/podcasts/search?type=podcast&q=${encodeURIComponent(q)}`, undefined, { timeout: 45000 }),
+      api('GET', `/api/podcasts/search?type=episode&q=${encodeURIComponent(q)}`, undefined, { timeout: 45000 }),
+    ]);
+    POD.search = { q, shows: shows.shows || [], items: eps.items || [], next: eps.next };
+  } catch (e) {
+    if (e.status === 401) return;
+    POD.search = { q, shows: [], items: [], error: e };
+    toast(e.code === 'old_server' ? t('podcasts.needNewerServer') : `${t('podcasts.couldntRead')} ${reason(e)}`, 'err');
+  }
+  renderPodcasts();
+}
+async function podMorePage() {
+  const cur = POD.view === 'show' ? POD.show : POD.view === 'list' ? POD.list : POD.search;
+  if (!cur?.next) return;
+  const path = POD.view === 'show' ? `/api/podcasts/show?id=${encodeURIComponent(cur.id)}&next=${encodeURIComponent(cur.next)}`
+    : POD.view === 'list' ? `/api/podcasts/list?which=${cur.which}&next=${encodeURIComponent(cur.next)}`
+    : `/api/podcasts/search?type=episode&next=${encodeURIComponent(cur.next)}`;
+  try {
+    const res = await api('GET', path, undefined, { timeout: 45000 });
+    cur.items.push(...(res.items || []));
+    cur.next = res.next;
+  } catch (e) {
+    if (e.status === 410) cur.next = '';
+    else if (e.status !== 401) toast(`${t('podcasts.couldntRead')} ${reason(e)}`, 'err');
+  }
+  const y = window.scrollY;
+  renderPodcasts();
+  window.scrollTo({ top: y });
+}
+// the episode as the Rondo is told of it (what it keeps of it, else these)
+const epBody = (e, more = {}) => ({ id: e.id, title: e.title, show: e.show, showId: e.showId, thumb: e.thumb, lengthMs: e.lengthMs || 0, progress: e.progress ?? -1, ...more });
+async function podAct(method, path, body, done) {
+  try {
+    const res = await api(method, path, body, { timeout: 45000 });
+    if (res?.player !== undefined && S.status) { S.status.player = res.player; S.statusAt = performance.now(); renderMini(); }
+    if (res?.state) POD.state = res.state;
+    if (res?.episode) for (const list of [POD.show?.items, POD.list?.items, POD.search?.items]) {
+      const at = (list || []).findIndex((x) => x.id === res.episode.id);
+      if (at >= 0) list[at] = { ...list[at], ...res.episode };
+    }
+    if (done) toast(done);
+    if (!res?.state) POD.state = await api('GET', '/api/podcasts/state');
+    renderPodcasts();
+    return res;
+  } catch (e) {
+    if (e.status !== 401) toast(e.code === 'no_cookies' ? t('podcasts.needCookies') : e.code === 'old_server' ? t('podcasts.needNewerServer') : t('podcasts.couldntDo', { reason: reason(e) }), 'err');
+    return null;
+  }
+}
+function epSheet(e) {
+  const signed = POD.state?.signedIn;
+  const b = (act, ic, label, cls = '') => `<button class="btn${cls}" type="button" data-act="${act}">${icon(ic)}<span>${esc(label)}</span></button>`;
+  openSheet(`<div class="song-sheet"><span class="art" data-thumb="${esc(e.thumb || '')}">${icon('podcast')}</span>
+      <div><h2>${esc(e.title)}</h2><p>${esc([e.show, e.subtitle].filter(Boolean).join(' · '))}</p></div></div>
+      <div class="pod-acts">
+        ${b('ep-play', 'play', e.positionMs && !e.played ? t('podcasts.resume') : t('podcasts.play'), ' btn-primary')}
+        ${e.positionMs || e.played ? b('ep-start', 'refresh', t('podcasts.startAgain')) : ''}
+        ${b('ep-next', 'queue', t('podcasts.playNext'))}${b('ep-queue', 'plus', t('podcasts.addToQueue'))}
+        ${e.onCard ? b('ep-undownload', 'trash', t('podcasts.deleteDownload'), ' btn-red-text') : b('ep-download', 'download', t('common.download'))}
+        ${b('ep-played', 'check', e.played ? t('podcasts.markUnplayed') : t('podcasts.markPlayed'))}
+        ${signed && (!e.played || e.later) ? b(e.later ? 'ep-unlater' : 'ep-later', 'clock', e.later ? t('podcasts.removeFromLater') : t('podcasts.saveForLater')) : ''}
+        ${e.showId && !(POD.view === 'show' && POD.show?.id === e.showId) ? b('ep-show', 'podcast', t('podcasts.goToPodcast')) : ''}
+      </div>`);
+  const art = $('.art[data-thumb]', sheet);
+  if (art?.dataset.thumb) loadArtInto(art, 240);
+  const onClick = async (ev) => {
+    const btn = ev.target.closest('[data-act]');
+    if (!btn) return;
+    sheet.removeEventListener('click', onClick);
+    sheet.close();
+    await epAction(btn.dataset.act, e);
+  };
+  sheet.addEventListener('click', onClick);
+  sheet.addEventListener('close', () => sheet.removeEventListener('click', onClick), { once: true });
+}
+async function epAction(act, e) {
+  if (act === 'ep-play') return podAct('POST', '/api/podcasts/play', epBody(e), t('podcasts.playing', { name: e.title }));
+  if (act === 'ep-start') return podAct('POST', '/api/podcasts/play', epBody(e, { from: 'start' }), t('podcasts.playing', { name: e.title }));
+  if (act === 'ep-next' || act === 'ep-queue') return podAct('POST', '/api/podcasts/queue', epBody(e, { next: act === 'ep-next' }), t('podcasts.queued', { name: e.title }));
+  if (act === 'ep-download') return podAct('POST', '/api/podcasts/download', epBody(e), t('podcasts.downloading', { name: e.title }));
+  if (act === 'ep-undownload') {
+    if (!(await confirmSheet({ title: t('podcasts.deleteDownload'), text: te('podcasts.deleteText', { title: e.title }), action: t('common.delete') }))) return;
+    return podAct('DELETE', `/api/podcasts/download?id=${encodeURIComponent(e.id)}`, undefined, t('podcasts.deletedFromCard'));
+  }
+  if (act === 'ep-played') return podAct('POST', '/api/podcasts/played', epBody(e, { played: !e.played }), e.played ? t('podcasts.markedUnplayed') : t('podcasts.markedPlayed'));
+  if (act === 'ep-later' || act === 'ep-unlater') {
+    const res = await podAct('POST', '/api/podcasts/later', { id: e.id, later: act === 'ep-later' }, act === 'ep-later' ? t('podcasts.addedToLater') : t('podcasts.removedFromLater'));
+    if (res) {
+      e.later = act === 'ep-later';
+      if (POD.view === 'list' && POD.list.which === 'later' && !e.later) { POD.list.items = POD.list.items.filter((x) => x.id !== e.id); renderPodcasts(); }
+    }
+    return;
+  }
+  if (act === 'ep-show') return openShow(e.showId, e.show);
+  if (act === 'ep-unqueue') return podAct('DELETE', `/api/podcasts/upnext?id=${encodeURIComponent(e.id)}`);
+}
+podBody.addEventListener('submit', (ev) => {
+  if (ev.target.id !== 'podSearch') return;
+  ev.preventDefault();
+  const q = new FormData(ev.target).get('q')?.toString().trim();
+  if (q) podSearch(q);
+});
+podBody.addEventListener('click', async (ev) => {
+  const act = ev.target.closest('[data-act]')?.dataset.act;
+  if (act === 'pod-back') {
+    POD.view = POD.view === 'show' && POD.search && POD.prev === 'search' ? 'search' : 'home';
+    POD.prev = null;
+    return POD.view === 'home' ? loadPodcasts(true) : renderPodcasts();
+  }
+  if (act === 'pod-more') return podMorePage();
+  if (act === 'show-save' && POD.show) {
+    const want = !POD.show.saved;
+    const res = await podAct('POST', '/api/podcasts/save', { id: POD.show.id, saved: want }, want ? t('podcasts.savedToast') : t('podcasts.removedToast'));
+    if (res) { POD.show.saved = want; POD.library = null; renderPodcasts(); }
+    return;
+  }
+  const list = ev.target.closest('[data-list]');
+  if (list) return openList(list.dataset.list);
+  const show = ev.target.closest('[data-show]');
+  if (show) { POD.prev = POD.view; return openShow(show.dataset.show, show.dataset.title); }
+  const row = ev.target.closest('[data-ep]');
+  if (!row) return;
+  const e = podEpisodes().find((x) => x.id === row.dataset.ep);
+  if (!e) return;
+  if (act === 'ep-play' || act === 'ep-unqueue') return epAction(act, e);
+  epSheet(e);
+});
+podBody.addEventListener('change', async (ev) => {
+  const sel = ev.target.closest('[data-act="show-speed"]');
+  if (!sel || !POD.show) return;
+  try {
+    const res = await api('PUT', '/api/podcasts/speed', { showId: POD.show.id, speed: +sel.value });
+    POD.show.speed = res.speed;
+    toast(t('podcasts.speedSet', { speed: podSpeedText(res.speed), name: POD.show.title }));
+  } catch (e) {
+    if (e.status !== 401) toast(t('podcasts.couldntDo', { reason: reason(e) }), 'err');
+  }
+});
+
 // ---------- uploads ----------
 let upId = 0;
 const fileInput = $('#fileInput');
@@ -1898,6 +2614,7 @@ const MENU = {
   videos: { tile: 'video', glyph: 'play', brand: 'video', t: ['#ff6a5c', '#d7001a'], title: 'YouTube', logo: MARK.video('pv-glyph pv-mark wide') },
   whatsapp: { tile: 'whatsapp', glyph: 'chat', brand: 'whatsapp', t: ['#63f08e', '#17a74c'], title: 'WhatsApp', logo: MARK.whatsapp('pv-glyph pv-mark wa') },
   device: { tile: 'device', glyph: 'library', t: ['#5fb7ff', '#1f73e0'], title: t('common.library') },
+  podcasts: { tile: 'podcasts', glyph: 'podcast', t: ['#e07bff', '#9b30d9'], title: t('podcasts.title') },
   nowPlaying: { tile: 'now', glyph: 'bars', t: ['#7be07b', '#26a83b'], title: t('overview.nothingPlaying') },
   radio: { tile: 'radio', glyph: 'radio', t: ['#ffb04d', '#f07a12'], title: t('nav.fmRadio') },
   settings: { tile: 'settings', glyph: 'gear', t: ['#b8bcc4', '#6f747d'], title: t('common.settings') },
@@ -2724,7 +3441,7 @@ function renderDownloads() {
       ${p.loading ? '' : `<button class="btn btn-sm" type="button" data-dl-update="${esc(p.id)}" aria-label="${te('downloads.updateName', { name: p.title })}">${icon('refresh')}<span class="dl-lbl">${te('downloads.update')}</span></button>`}
       <button class="btn btn-sm btn-red-text" type="button" data-dl-list="${esc(p.id)}" aria-label="${te('downloads.deleteName', { name: p.title })}">${icon('trash')}</button></div>`);
   const jobRows = jobs.map((j) => {
-    const what = j.kind === 'song' ? t('downloads.kind.song') : `${j.quality}p`;
+    const what = j.kind === 'song' ? t('downloads.kind.song') : j.kind === 'episode' ? t('downloads.kind.episode') : `${j.quality}p`;
     const acts = j.state === 'failed'
       ? `<button class="btn btn-sm" type="button" data-dl-retry="${esc(j.id)}">${te('common.tryAgain')}</button>
          <button class="btn btn-sm btn-quiet" type="button" data-dl-cancel="${esc(j.id)}" aria-label="${te('downloads.takeOff', { name: j.title })}">${icon('close')}</button>`
@@ -3253,7 +3970,7 @@ function renderDateTime() {
       <div class="row-main"><div class="row-title">${te('settings.date.dateTime')}</div><div class="row-sub">${te('settings.date.dateTimeSub')}</div></div>
       <div class="row-control date-set"><input type="datetime-local" id="dtValue" value="${esc(rondoLocal(d))}" aria-label="${te('settings.date.dateTime')}">
         <button class="btn btn-sm" type="button" id="dtFromHere">${te('settings.date.fromHere')}</button><button class="btn btn-sm btn-primary" type="button" id="dtSet">${te('settings.date.set')}</button></div></div>`}
-    <div class="row set-row"><span class="tile t-zone">${icon('broadcast')}</span>
+    <div class="row set-row"><span class="tile t-zone">${icon('podcast')}</span>
       <div class="row-main"><div class="row-title">${te('settings.date.autoZone')}</div><div class="row-sub">${te('settings.date.autoZoneSub', { city: d.city, zone: d.zone })}</div></div>
       <button class="switch" type="button" role="switch" data-dt="autoZone" aria-checked="${d.autoZone}" aria-label="${te('settings.date.autoZoneLabel')}"></button></div>
     ${d.autoZone ? '' : `<div class="row row-wide set-row"><span class="tile t-globe">${icon('globe')}</span>

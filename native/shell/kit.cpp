@@ -1,6 +1,7 @@
 #include "kit.h"
 
 #include "../core/lang.h"
+#include "video_places.h"
 
 #include "../core/fold.h"
 
@@ -120,11 +121,22 @@ const Tile language{Icon::Globe, rgb(0x4fc3f7), rgb(0x0288d1)};  // Settings ›
 const Tile audiobooks{Icon::Book, rgb(0xffa24d), rgb(0xe8660c)};
 const Tile resume{Icon::Play, rgb(0x7be07b), rgb(0x26a83b)};
 const Tile startAgain{Icon::Refresh, rgb(0xffb04d), rgb(0xf07a12)};
+// Continue watching (Library › Videos, YouTube's Home): the videos started, as History's clock
+const Tile continueWatching{Icon::History, rgb(0x8c7bff), rgb(0x4b36d6)};
 const Tile chapters{Icon::Queue, rgb(0x5fb7ff), rgb(0x1f73e0)};
 const Tile bookmarks{Icon::Bookmark, rgb(0xc58cff), rgb(0x7b3fe0)};
 const Tile speed{Icon::Gauge, rgb(0x4fd8c8), rgb(0x139c8c)};
 const Tile finished{Icon::Check, rgb(0xb8bcc4), rgb(0x6f747d)};
 const Tile sleep{Icon::Moon, rgb(0x8c7bff), rgb(0x4b36d6)};
+// YouTube Music's Podcasts pill, a show's screen and an episode's menu
+const Tile podcasts{Icon::Podcast, rgb(0xe07bff), rgb(0x9b30d9)};
+const Tile later{Icon::Clock, rgb(0x4fd8c8), rgb(0x139c8c)};
+const Tile newEpisodes{Icon::Sparkle, rgb(0xffb04d), rgb(0xf07a12)};
+const Tile upNext{Icon::Queue, rgb(0x5fb7ff), rgb(0x1f73e0)};
+const Tile saveShow{Icon::Bookmark, rgb(0xff7a93), rgb(0xd6304f)};
+const Tile topShows{Icon::Flame, rgb(0xffa36b), rgb(0xe8521c)};
+const Tile listenOnly{Icon::Headphones, rgb(0x8c9eff), rgb(0x3d5afe)};
+const Tile showNotes{Icon::Type, rgb(0xffd54f), rgb(0xe6a100)};
 const Tile power{Icon::Power, rgb(0xff7a7a), rgb(0xe0283c)};
 const Tile restart{Icon::Refresh, rgb(0xffb04d), rgb(0xf07a12)};
 // Library: its sections
@@ -320,9 +332,18 @@ int RowList::firstSelectable() const {
 
 void RowList::setRows(std::vector<Row> rows, bool keepSelection) {
   int previous = selected_;
+  bool had = keepSelection && previous >= 0 && previous < int(rows_.size());
+  Row was = had ? rows_[size_t(previous)] : Row();
   rows_ = std::move(rows);
   message_ = rows_.empty() ? tr("common.nothingHere") : "";
-  selected_ = keepSelection && selectable(previous) ? previous : firstSelectable();
+  // the same row, wherever it went (a row put in above it: Continue watching), else the same place
+  int same = -1;
+  if (had)
+    for (int i = 0; i < int(rows_.size()); i++)
+      if (selectable(i) && rows_[size_t(i)].title == was.title && rows_[size_t(i)].thumb == was.thumb && rows_[size_t(i)].tile == was.tile &&
+          (same < 0 || abs(i - previous) < abs(same - previous)))
+        same = i;
+  selected_ = same >= 0 ? same : keepSelection && selectable(previous) ? previous : firstSelectable();
   top_.clear();
   placed_ = false;
   if (onSelectionChanged) onSelectionChanged();
@@ -598,6 +619,16 @@ void RowList::drawMusic(Env& e, float x, float y) {
         c.layer(4);
         drawLabel(e, b, br.x + e.dp(3), br.y + e.dp(1), p.white);
       }
+      // how far it got (its place, else YouTube's): YouTube's red bar along the picture's foot
+      float got = r.place.empty() ? -1 : videoProgress(r.place, r.placeLen, r.placePct);
+      if (got >= 0) {
+        float inset = radius * 0.6f, bh = e.dpf(3), bw = ar.w - 2 * inset;
+        Rect track{ar.x + inset, ar.y + ar.h - bh, bw, bh};
+        c.layer(3);
+        c.fill(track, 0x99717171);
+        c.layer(4);
+        c.fill({track.x, track.y, std::max(e.dpf(2), bw * got), bh}, 0xffff0033);
+      }
       float colX = left + artW + e.dp(9), colW = right - colX;
       c.layer(4);
       std::vector<Label> title = wrap(e, r.title, 12, sel > 0.5f, colW, 2);
@@ -623,6 +654,12 @@ void RowList::drawMusic(Env& e, float x, float y) {
       Label trail = label(e, r.trailing, 11, false);
       end -= trail.w;
       drawLabel(e, trail, end, ctop + float((ch - trail.h) / 2), mix(p.darkMuted, p.focusMuted, sel));
+      end -= e.dp(6);
+    }
+    if (r.dot) {  // an episode not heard yet (YouTube Music's podcasts): the iPod's dot, in the accent
+      int d = e.dp(7);
+      end -= d;
+      c.shape({end, ctop + float((ch - d) / 2), float(d), float(d)}, float(d) / 2, p.accent);
       end -= e.dp(6);
     }
     float colW = end - colX;

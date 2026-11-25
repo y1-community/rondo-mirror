@@ -4,6 +4,55 @@ The server's releases, newest first (tags `server-v<version>`, on the
 [releases page](https://github.com/jarvissax/rondo/releases)). Until 3.0.1 the server shared Rondo's
 version, and its changes are in Rondo's [CHANGELOG.md](../CHANGELOG.md).
 
+## 3.8.1 (November 25, 2026)
+
+- **How far a video was watched, with the code sign-in too:** home, subscriptions and history come
+  from YouTube's TV app when the server is signed in with a code, and 3.8.0 left their red bar out;
+  their videos now carry `watched` as well.
+
+## 3.8.0 (November 25, 2026)
+
+For Rondo 4.3.0, whose videos pick up where you left off. A new field only: nothing an older Rondo
+asks changes.
+
+- **How far a video was watched:** a YouTube video in YouTube's lists (home, subscriptions, history,
+  search, related) carries `watched`, the account's progress as YouTube's red bar under its picture
+  shows it (1–100), for Rondo 4.3.0, which opens a video it has no place for at about that point and
+  draws the bar. A new field only: an older Rondo ignores it.
+
+## 3.7.0 (November 25, 2026)
+
+Podcasts, for Rondo 4.2.0. All new routes: nothing an older Rondo asks changes, and a Rondo older
+than 4.2.0 works with it as before.
+
+- **YouTube Music's podcasts**, for the Rondo that has them (all new routes; nothing an older Rondo
+  asks changes): `GET /music/podcasts` (the account's saved shows, and how many episodes Episodes for
+  Later and New Episodes hold), `/music/podcasts/later` and `/music/podcasts/new` (those two lists,
+  paged), `/music/podcast/<id>` (a show: its header, whether it's saved, its episodes newest first,
+  paged), `/music/episode/<id>` (an episode: its length, YouTube's chapters, how much of it the account
+  has heard, whether it's in Episodes for Later) and `/music/search?type=podcast` or `type=episode`.
+  `POST /music/podcast/<id>/save`, `/music/episode/<id>/later` and `/music/episode/<id>/played` save a
+  show, put an episode in or out of Episodes for Later and mark it played or unplayed on the account,
+  as YouTube Music's own buttons do, so the phone agrees. The account's need cookies.txt (the code
+  sign-in's TV app has no podcasts). Episodes play through the same `/s/` streams as songs.
+- **Home with podcasts:** `GET /music/home?podcasts=1` gives a show on a home shelf as a show and an
+  episode as an episode. Without it nothing changes, except that a show's card (which YouTube Music's
+  home can have) is left out instead of coming as a video that can't play.
+- **RSS podcasts**, for the Rondo that has them (new routes only; nothing an older Rondo asks
+  changes). The Rondo plays episodes straight from each podcast's own host; the server helps it read
+  feeds: `GET /podcasts/feed?url=` reads a podcast's RSS feed and answers it compact (the show, and
+  each episode's title, date, length, audio address and notes as plain text), a page at a time
+  (`offset`, `limit`, `next`), or with `since=` only the episodes newer than the Rondo already has.
+  A feed is kept in memory for 10 minutes, then asked again only if it changed (ETag,
+  Last-Modified); nothing is written to disk. The server reads feeds only from addresses on the
+  internet, never from its own network (redirects and changing DNS answers included), follows up to
+  5 redirects, gives up after 30 s and refuses a feed over 60 MB.
+- **Podcast search in Podcast Index:** `GET /podcasts/index/search?q=` finds shows in
+  [Podcast Index](https://podcastindex.org) with the server's own free key, so podcast search on the
+  Rondo finds shows there as well as in Apple's directory. The admin page has a new **Podcasts** page
+  to paste the key and its secret, check that it works, replace it or remove it; the secret stays on
+  the server and is never shown again or logged.
+
 ## 3.6.1 (November 24, 2026)
 
 - **WhatsApp's words in the Rondo's language:** what the server writes itself for a WhatsApp chat

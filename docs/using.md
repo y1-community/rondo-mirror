@@ -44,8 +44,8 @@ last 30) and then smileys, people, animals, food, travel, activities, objects, s
 
 ## Main menu
 
-**Now Playing**, **Library**, **YouTube**, **YouTube Music**, **WhatsApp**, **FM Radio** and
-**Settings**. The right side shows what's highlighted, or what's playing. **Settings › Display › Theme › Main menu** changes
+**Now Playing**, **Library**, **Podcasts**, **YouTube**, **YouTube Music**, **WhatsApp**, **FM Radio**
+and **Settings**. The right side shows what's highlighted, or what's playing. **Settings › Display › Theme › Main menu** changes
 the order and which entries show up.
 
 <p align="center">
@@ -95,7 +95,9 @@ Recently played, Top rated) and **The card** (Rescan, Organize). Every list of s
 - **Hold center on a song** to play it now, play it next, add it to the queue or a playlist, or
   delete it from the card.
 - **Videos** lists all the videos on the card, the newest first, and each folder that has some.
-  YouTube videos you downloaded are there too, in `Videos/YouTube`.
+  YouTube videos you downloaded are there too, in `Videos/YouTube`. **Continue watching**, at the
+  top once you've started one, has the videos you stopped partway, the last one first; a started
+  video's row says how much is left, and hold center on it for **Resume** or **Start again**.
 - **Photos** shows the JPEG and PNG pictures on the card and the internal storage, by folder (and
   all of them, the newest first), as a grid: turn the wheel to pick one, press center to see it full
   screen. There the wheel (or Next and Prev) slides from one to the next, center shows its name and
@@ -181,6 +183,64 @@ finished**.
 To get books onto the card, copy them into `Audiobooks` (as a USB drive, see
 [Adding music](#adding-music)), or upload them on the [dashboard](dashboard.md#library).
 
+## Podcasts
+
+**Podcasts** on the main menu has shows from their own feeds (RSS), the way podcast apps get them:
+anything in Apple's podcast directory, and any show you have a feed address for. It works with or
+without a [Rondo server](server.md): the Y1 reads the feeds and plays the episodes straight from
+each podcast's own host. (YouTube Music's podcasts are separate, in YouTube Music's
+[Podcasts tab](#podcasts-in-youtube-music).)
+
+- **Continue listening:** the episodes you've started, the last one first, with the time left.
+- **New episodes:** what your shows put out since you subscribed, newest first. An episode leaves
+  the list when you finish it or mark it played, or after a month. When you subscribe, only the
+  show's newest episode counts as new.
+- **Your shows:** the shows you subscribe to, the latest updated first, each with how many new
+  episodes it has.
+- **Save for later:** episodes you keep for later (hold center on one, then **Save for later**).
+- **Top shows:** Apple's charts for your country, all of them or a category's.
+- **Downloaded:** the episodes on the card, and the ones on their way.
+- **Search podcasts** finds a show by its name in Apple's directory, and in
+  [Podcast Index](https://podcastindex.org) too when there's a key (on your server's admin page, or,
+  without a server, on the [dashboard](dashboard.md#podcasts)).
+
+Rondo looks for new episodes when you open Podcasts, and every 4 hours while the Y1 is on or
+playing (a sleeping Y1 doesn't wake up for it). **Podcast settings**, the menu's last row, has
+**Look for new episodes** (now) and the **Country** whose directory and charts are used: the United
+States unless you choose another.
+
+**A show's page** has its cover and what it is, **Subscribe** (or **Subscribed**: center
+unsubscribes, and asks about its downloads), its **Speed**, **Download new episodes** (once you
+subscribe) and **About this show**, then its episodes: newest first, or, for a show told in order
+(an audio drama, a history series), episode 1 first. Each says when it came out and how long it
+is, or how much is left, or **Played**; a dot marks one you haven't started. A show with thousands
+of episodes scrolls as quickly as a short one.
+
+**Center** plays an episode; **hold center** for its options: **Play** (or **Resume**, or **Watch**
+for a video episode), **Listen only** (a video episode's sound alone, with the screen free to go
+off), **Start again**, **Play next**, **Add to queue**, **Download**, **Save for later**, **Mark as
+played**, **Show notes** and **Go to show**.
+
+**An episode plays as an audiobook does** (see [Audiobooks](#audiobooks)): it remembers where you
+stopped and starts a little earlier after a pause; Next and Previous move by its chapters when it
+has them (the feed's chapter file, or the MP3's own), else skip 30 seconds forward and 15 back; and
+the options have Chapters, bookmarks, Speed, the Sleep timer and **Back to your music**. **Speed is
+kept per show.** Your music waits while an episode plays. **Play next** and **Add to queue** put an
+episode in **Episodes up next**, after the episode or book playing, or after the song playing.
+
+**A video episode** opens in the video player, where you left it, and keeps its place there too.
+Its options (hold center) have **Listen only**.
+
+**Downloads** go to the card, in `Podcasts/<show>`, beside YouTube Music's, as the podcast's own
+file. Nothing downloads by itself unless you turn on a show's **Download new episodes**: then, on
+Wi-Fi, its latest episodes (1, 2, 3, 5 or 10 of them, your choice) are kept on the card as they
+come out, and **Delete played episodes** can remove each one once you've heard it. One you delete
+by hand isn't downloaded again.
+
+Shows also come from the [dashboard](dashboard.md#podcasts): **Add by address** for a private or
+paid show (the address its website gives you; only the Y1 ever reads it), and **Import OPML** to
+bring your shows from another podcast app (**Export OPML** takes them the other way).
+
 ## YouTube Music and YouTube
 
 Both work as soon as the Y1 is on Wi-Fi: Rondo talks to YouTube itself, with nothing to set up.
@@ -190,6 +250,10 @@ wheel on the tab row and press center to switch. YouTube Music's home is shelves
 each section a row of covers that slides along as you turn the wheel, then on into the next. **Search** uses an on-screen keyboard you type on
 with the wheel.
 
+- **YouTube's Home** starts with Shorts, **Downloads** and, once you've started one, **Continue
+  watching**: the YouTube videos you stopped partway on the Y1, the last one first (a downloaded one
+  plays from the card). A red bar under a video's picture shows how far it got, as in YouTube's app;
+  hold center on a started one for **Resume**, **Start again** or **Download**.
 - **Signed in**, you also get **Library** (your playlists and Liked Music) in YouTube Music, and
   **Subscriptions** and **History** in YouTube, whose home is then picked for you. Sign in with a
   code in **Settings › YouTube › YouTube account** (see [Settings](#settings)); through a server,
@@ -231,7 +295,48 @@ with the wheel.
 
 <p align="center"><img src="images/downloads.png" width="360" alt="YouTube › Home › Downloads: the videos saved on the card"></p>
 
-### Shorts
+### Podcasts in YouTube Music
+
+YouTube Music's podcasts are in its **Podcasts** tab (beside Home and Library), apart from the main
+menu's [Podcasts](#podcasts):
+
+- **Continue listening:** the episodes you've started, the last one first, with the time left.
+- **Episodes up next**, when some wait (see below).
+- **Episodes for Later** and **New episodes** (the latest from your shows), signed in.
+- **Downloaded:** the episodes on the card, to play with no connection.
+- **Search podcasts** finds shows and episodes. YouTube Music's search for songs also offers a
+  **Podcasts** row at its top when shows match the words.
+- **Your shows:** the podcasts saved in your YouTube account (signed in with a cookies.txt: the code
+  sign-in has no podcasts).
+
+**A show's page** has **Save to library** (or **Saved to library**), its **Speed**, then its episodes,
+newest first, hundreds of them loading as you go down. Each says when it came out and how long it is,
+or how much is left, or **Played**; a dot marks one you haven't started. Center plays an episode; hold
+center for its menu: **Play** (or **Resume**), **Start again**, **Play next**, **Add to queue**,
+**Download**, **Mark as played**, **Save for later** and **Go to podcast**.
+
+**An episode plays as an audiobook does** (see [Audiobooks](#audiobooks)): it remembers where you
+stopped, starts a little earlier after a pause, and Next and Previous move by YouTube's chapters
+when the episode has them (else 30 seconds forward and 15 back); Now Playing shows the chapter, and
+the options have Chapters, bookmarks, Speed, the Sleep timer and **Back to your music**. **Speed** is
+kept per show: every episode of it plays at the speed you chose. Your music waits while an episode
+plays and comes back when you choose Back to your music.
+
+- **Play next and Add to queue** put an episode in **Episodes up next**: it plays after the episode
+  or book playing; while music plays, after the song playing. Each one starts where you left it.
+- **Played marks are shared with your phone:** an episode you finish (or mark played) on the Y1 is
+  **Played** in YouTube Music on your phone, and one you finish or mark there shows Played here. One
+  you started on the phone opens on the Y1 at about where you left it. (Where you stopped on the Y1
+  stays on the Y1.) **Episodes for Later** is your YouTube list, so it's the same on both; YouTube
+  keeps only unplayed episodes in it.
+- **Download** saves an episode to the card, in `Podcasts/<show>`, to play with no connection, with
+  its chapters and its place. Episodes stay out of Songs and Shuffle songs. Downloading one while it
+  plays carries on from the card once it's whole.
+
+Through a [server](server.md), podcasts need Rondo server 3.7.0 or newer; directly to YouTube they
+need nothing more.
+
+## Shorts
 
 YouTube's home page starts with **Shorts**: one short at a time, looping, picked for your account
 when you're signed in. **Next / Previous** move to the next or previous short,
@@ -329,7 +434,13 @@ two blue read (or played).
 </p>
 
 - **Wheel:** volume. **Center:** scrub. **Next / Previous:** 10 seconds forward or back.
-- **Hold center** for the options: **Quality** (YouTube), **Subtitles** (Off, or one of the video's
+- **Where you stopped is kept** for every video 10 minutes or longer, from the card or YouTube: it
+  opens there next time, a few seconds earlier ("Resuming at 23:41"), until you watch it to the end.
+  A video you downloaded shares its place with the same video on YouTube. Shorts and shorter videos
+  start from the beginning. Signed in to YouTube, a video you started on your phone (its red bar)
+  opens about where you left it there, unless the Y1 has a place of its own for it; the Y1 doesn't
+  tell YouTube what it played.
+- **Hold center** for the options: **Start again** (a video that keeps its place), **Quality** (YouTube), **Subtitles** (Off, or one of the video's
   tracks) and **Download** (YouTube: to the card at the height picked). A YouTube video's tracks are
   its own and the speech recognition's; a video on the card has the subtitle files beside it
   (`Movie.srt`, `Movie.en.srt`, `Movie.en.forced.ass`…). The language picked last is shown first
@@ -439,6 +550,8 @@ the same Wi-Fi and type the code. From there you can:
 - see what's playing and control it, and shut down, restart or update Rondo,
 - browse, search, upload and delete music, videos and photos, manage the card's files and
   folders, organize the card, and make playlists and smart playlists,
+- upload audiobooks and follow their progress, and follow podcasts: search, Top shows, a show by
+  its address, and OPML import and export,
 - change the theme, the sound, the menu and every setting above,
 - manage Wi-Fi, Bluetooth and the FM radio, sign in to YouTube, download YouTube videos, and
   connect a server (its own **Server** page).

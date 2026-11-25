@@ -15,9 +15,12 @@
 #include "../platform/video_surface.h"
 #include "app.h"
 #include "downloads.h"
+#include "rss.h"
 #include "screens.h"
 #include "scrub.h"
 #include "subtitles.h"
+#include "video_places.h"
+#include "../core/video_place.h"
 
 namespace rondo::shell {
 namespace {
@@ -36,14 +39,22 @@ std::vector<std::string> pictures(const Item& item, int height) { return videoPi
 
 class VideoPlayerScreen : public Screen {
  public:
-  explicit VideoPlayerScreen(const Item& item) : item_(item), local_(!item.id.empty() && item.id[0] == '/') {
+  // placeKey: a podcast episode's (rss.h): it opens where it was left, and keeps its place. Any other
+  // video 10 minutes or longer does too, by its own key (video_places.h)
+  explicit VideoPlayerScreen(const Item& item, std::string placeKey = "")
+      : item_(item), local_(!item.id.empty() && item.id[0] == '/'), placeKey_(std::move(placeKey)) {
+    if (placeKey_.empty()) videoKey_ = videoPlaceKey(item_);
+    if (!placeKey_.empty() && !local_) tracksKnown_ = true;  // an episode from its host: no subtitles
     if (local_) {
       tracks_ = subtitleFiles(item_.id);
       tracksKnown_ = true;
     }
   }
   ~VideoPlayerScreen() override {
-    if (started_) g_player.stopVideo();
+    if (started_) {
+      savePlace(true);
+      g_player.stopVideo();
+    }
   }
   std::string title() const override { return item_.title; }
   bool statusBar() const override { return false; }
@@ -53,7 +64,9 @@ class VideoPlayerScreen : public Screen {
       started_ = true;
       if (VideoSurface* v = VideoSurface::get()) v->clear();  // the last video's picture is not this one's
       g_player.playVideo(videoSound(item_), pictures(item_, g_prefs.videoQuality));
-      if (!local_) {
+      if (!placeKey_.empty()) startAt_ = rssVideoStart(placeKey_), sought_ = startAt_ <= 0;
+      else if (!videoKey_.empty()) startAt_ = -1, sought_ = false;  // decided once its length is known
+      if (!local_ && placeKey_.empty()) {
         requests_.get("/captions/" + Api::escape(item_.id), 600000, [this](int status, const std::string& body) {
           std::vector<CaptionTrack> found;
           if (status == 200) parseCaptions(body, found);
@@ -136,6 +149,23 @@ class VideoPlayerScreen : public Screen {
   }
 
   bool tick(int64_t now) override {
+    if ((!placeKey_.empty() || !videoKey_.empty()) && started_) {
+      PlayerState s = g_player.state();
+      // where it was left, once this video plays (a seek while it's still opening is lost: the picture
+      // starts at 0), as a scrub would
+      bool ours = s.index >= 0 && videoSound(item_) == s.path;
+      if (!sought_ && ours && s.durationMs > 0 && s.playing && PlayerHost::positionAt(s, now) > 300) {
+        sought_ = true;
+        bool told = startAt_ < 0;  // a video's own: said on the screen
+        if (startAt_ < 0) startAt_ = videoOpensAt(videoKey_, s.durationMs, item_.watchedPct);
+        if (startAt_ > 0 && startAt_ < s.durationMs - 5000) {
+          g_player.seekTo(startAt_);
+          if (told) g_app->toast(tr("videoPlayer.resumingAt", {{"time", formatTime(int(startAt_ / 1000))}}));
+        }
+      } else if (sought_ && now - savedAt_ >= 10 * kSec) {
+        savePlace(false);
+      }
+    }
     bool jumped = scrub_.tick(now);
     if (panel_) {  // a download's progress, the tracks arriving
       std::string key = panelKey();
@@ -298,7 +328,35 @@ class VideoPlayerScreen : public Screen {
       rows.push_back(r);
     };
     VideoPlayerScreen* self = const_cast<VideoPlayerScreen*>(this);
-    if (!local_) {
+    // a podcast episode: its sound alone, as spoken word with the screen free to go off
+    if (!placeKey_.empty()) {
+      header(tr("rss.episode"));
+      PanelRow r;
+      r.text = tr("rss.listenOnly");
+      r.note = tr("rss.listenOnlyNote");
+      std::string key = placeKey_;
+      r.pick = [self, key] {
+        self->savePlace(true);
+        const RssEpisode* e = rssKept(rssIdOf(key));
+        if (!e) return;
+        RssEpisode copy = *e;
+        g_player.stopVideo();  // now, not as the screen goes (the sound plays on by then)
+        self->started_ = false;
+        g_app->pop();
+        listenRss(copy);
+        openNowPlaying();
+      };
+      rows.push_back(r);
+    }
+    // a video that keeps its place: from the beginning
+    if (!videoKey_.empty() && videoKeepsPlace(g_player.state().durationMs)) {
+      header(tr("videoPlayer.thisVideo"));
+      PanelRow r;
+      r.text = tr("book.startAgain");
+      r.pick = [] { g_player.seekTo(0); };
+      rows.push_back(r);
+    }
+    if (!local_ && placeKey_.empty()) {
       header(tr("videoPlayer.quality"));
       for (int q : kChoices) {
         PanelRow r;
@@ -338,7 +396,7 @@ class VideoPlayerScreen : public Screen {
       };
       rows.push_back(r);
     }
-    if (!local_) {
+    if (!local_ && placeKey_.empty()) {
       header(tr("videoPlayer.download"));
       const DownloadJob* job = nullptr;
       for (const DownloadJob& j : downloadJobs())
@@ -462,8 +520,23 @@ class VideoPlayerScreen : public Screen {
     e.c.popClip();
   }
 
+  // its place (a podcast episode's, a video's): every 10 s while it's on, and as it closes
+  void savePlace(bool closing) {
+    if ((placeKey_.empty() && videoKey_.empty()) || !sought_) return;
+    savedAt_ = now_ns();
+    PlayerState s = g_player.state();
+    if (s.index < 0 || s.durationMs <= 0 || videoSound(item_) != s.path) return;  // (not yet this video's state)
+    int64_t at = PlayerHost::positionAt(s, savedAt_);
+    if (!placeKey_.empty()) rssVideoPlace(placeKey_, at, s.durationMs, s.ended);
+    else videoPlaceSave(videoKey_, item_, at, s.durationMs, s.ended);
+    (void)closing;
+  }
+
   Item item_;
   bool local_;
+  std::string placeKey_, videoKey_;
+  int64_t startAt_ = 0, savedAt_ = 0;
+  bool sought_ = true;
   bool started_ = false;
   Requests requests_;
   std::vector<SubTrack> tracks_;
@@ -484,7 +557,7 @@ class VideoPlayerScreen : public Screen {
 // The server's H.264 DASH streams (136 is 720p, 135 480p, 134 360p). A height the video doesn't have
 // falls back to the next one down (direct mode's YouTube client often has no 720p: 480p, not 360p).
 std::vector<std::string> videoPictures(const Item& item, int height) {
-  if (!item.id.empty() && item.id[0] == '/') return {item.id};
+  if (!item.id.empty() && (item.id[0] == '/' || item.id.compare(0, 4, "http") == 0)) return {item.id};  // a file, an episode's address
   std::string base = "/s/" + item.id + "/";
   std::vector<std::string> out;
   if (height == 720) out.push_back(base + "136");
@@ -493,8 +566,11 @@ std::vector<std::string> videoPictures(const Item& item, int height) {
   return out;
 }
 
-std::string videoSound(const Item& item) { return !item.id.empty() && item.id[0] == '/' ? item.id : "/s/" + item.id + "/140"; }
+std::string videoSound(const Item& item) {
+  return !item.id.empty() && (item.id[0] == '/' || item.id.compare(0, 4, "http") == 0) ? item.id : "/s/" + item.id + "/140";
+}
 
 void openVideo(const Item& item) { g_app->push(std::unique_ptr<Screen>(new VideoPlayerScreen(item))); }
+void openVideoEpisode(const Item& item, const std::string& placeKey) { g_app->push(std::unique_ptr<Screen>(new VideoPlayerScreen(item, placeKey))); }
 
 }  // namespace rondo::shell

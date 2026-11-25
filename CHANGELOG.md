@@ -5,6 +5,116 @@ Rondo's releases, newest first. Each one is on the
 Innioasis Updater CE and the update for a Y1 that already runs Rondo. Since 3.0.2 the server has
 releases of its own, in [server/CHANGELOG.md](server/CHANGELOG.md).
 
+## 4.3.0 (November 25, 2026)
+
+Videos pick up where you left off. An update for the 4.0 firmware: Settings › System › Software
+update, the dashboard or the [update page](https://jarvissax.github.io/rondo/). It works with Rondo
+server 3.1.0 or newer; your phone's progress through a server needs Rondo server 3.8.1.
+
+### New
+
+- **Videos pick up where you left off.** Every video 10 minutes or longer, on the card or on
+  YouTube, opens where you stopped it, a few seconds earlier ("Resuming at 23:41"), until you watch
+  it to the end; Shorts and shorter videos start over. A downloaded video shares its place with the
+  same video on YouTube.
+- **Continue watching:** at the top of Library › Videos for the card's videos, and on YouTube's Home
+  for YouTube's (a downloaded one plays from the card), the last one watched first. A started video's
+  row says how much is left, and YouTube's rows show a red bar under the picture, as YouTube's app
+  does. Hold center on a started video, or in the player, for **Start again**.
+- **Your phone's progress too:** signed in to YouTube, a video you half-watched on your phone opens on
+  the Y1 about where you left it, and its red bar shows in YouTube's lists, unless the Y1 has a place
+  of its own for it. The Y1 doesn't tell YouTube what it played. Through a server this needs Rondo
+  server 3.8.1.
+- **The dashboard's Library** sorts videos by **Continue watching**, says where you stopped in a
+  video's details, and has **Start again** there.
+
+### Changed
+
+- **Podcasts have an icon of their own** on the main menu, in YouTube Music's Podcasts tab and on the
+  dashboard, instead of Connections' waves.
+
+### Fixed
+
+- **A list keeps the row you were on** when one comes in above it (Continue watching, on coming back
+  from a video).
+
+## 4.2.0 (November 25, 2026)
+
+Podcasts: any show with a public feed, on the main menu, and YouTube Music's own. An update for the
+4.0 firmware: Settings › System › Software update, the dashboard or the
+[update page](https://jarvissax.github.io/rondo/). It works with Rondo server 3.1.0 or newer;
+YouTube Music's podcasts through a server need Rondo server 3.7.0, released with it.
+
+### New
+
+**Podcasts on the main menu**, from the shows' own feeds (RSS), as podcast apps get them:
+
+- **Podcasts, from their feeds** (a new **Podcasts** entry on the main menu, after Library; hide it in
+  Settings › Display › Theme › Main menu): **Continue listening**, **New episodes** (what your shows
+  put out since you subscribed, for a month), **Your shows**, **Save for later**, **Top shows**
+  (Apple's charts for your country, by category), **Downloaded** and **Search podcasts** (Apple's
+  directory, and Podcast Index's with a free key). The Y1 reads the feeds and plays the episodes
+  straight from each podcast's host, with or without a Rondo server.
+- **A show's page:** **Subscribe**, its **speed**, **Download new episodes** (on Wi-Fi, the latest 1
+  to 10 kept on the card, played ones deleted if you like; nothing downloads by itself otherwise),
+  **About this show**, and its episodes, newest first (a show told in order: episode 1 first), with a
+  dot on the ones you haven't started and the time left on the ones you have. Thousands of episodes
+  scroll as quickly as a few.
+- **Episodes play as audiobooks do:** their place kept, a little earlier after a pause, chapters
+  (the feed's chapter file or the MP3's own) or 30 s and 15 s skips, bookmarks, the sleep timer,
+  Episodes up next and Back to your music; **speed is kept per show**. A **video episode** opens in
+  the video player where you left it, and **Listen only** plays its sound with the screen off. An
+  episode's options also have **Show notes**.
+- **New episodes are looked for** when Podcasts opens and every 4 hours while the Y1 is on or
+  playing. **Podcast settings** (Podcasts' last row) has **Look for new episodes** and the **Country**
+  for the directory and the charts (the United States unless you choose another).
+- **Downloads** go to `Podcasts/<show>` on the card, as the podcast's own file, beside YouTube
+  Music's episodes.
+- **The dashboard's Podcasts page** has these shows first (YouTube Music's below): search, Top shows,
+  every list, a show's page with Subscribe, speed and Download new episodes, every episode's options,
+  **Add by address** (a private or paid show's feed, read only by the Y1), **Import OPML** and
+  **Export OPML** to move your shows from and to other podcast apps, the country, and without a
+  server a Podcast Index key of the Y1's own.
+
+They need no server at all. With Rondo server 3.7.0, search finds Podcast Index's shows too (with
+the key on its admin page), and big feeds come from it a page at a time.
+
+**Podcasts in YouTube Music**, in a tab of their own:
+
+- **Podcasts, from YouTube Music** (YouTube Music › **Podcasts**, a tab beside Home and Library):
+  your saved shows, **Episodes for Later**, **New episodes**, what's downloaded, **Continue
+  listening**, and search for shows and episodes (song search offers matching podcasts too; Home's
+  shelves open shows and play episodes). A show's page has **Save to library**, its **speed** and its
+  episodes newest first, with a dot on the ones you haven't heard and the time left on the ones you've
+  started; hundreds load as you scroll.
+- **Episodes play as audiobooks do:** each remembers where you stopped and starts a little earlier
+  after a pause, Next and Previous move by YouTube's chapters (or skip 30 s and 15 s), with bookmarks,
+  the sleep timer and Back to your music. **Speed is kept per show.** Your music waits.
+- **Episodes up next:** Play next and Add to queue put episodes after the episode or book playing, or
+  after the song playing; each starts where you left it.
+- **Played marks are shared with YouTube Music on your phone**, both ways; an episode started on the
+  phone opens about where you left it there.
+- **Download** an episode to the card (`Podcasts/<show>`) to play it offline, chapters and place
+  included. Episodes stay out of Songs and Shuffle songs.
+- **The dashboard's Podcasts page** (a tab of its own): the same lists, a show's page with its speed,
+  and every episode's options, played on the Y1.
+
+Through a server, YouTube Music's podcasts need **Rondo server 3.7.0**; directly to YouTube they
+work as they are. With an older server, YouTube Music › Podcasts says so and still plays what's on
+the card.
+
+### Changed
+
+- YouTube Music's header shows the logo without the word "Music" and the battery alone when it has
+  three tabs (Home, Library, Podcasts), as YouTube's does.
+
+### Fixed
+
+- **A book or an episode started after the card came back from a computer** (the USB drive) jumped
+  to where the music had been at its first pause and play.
+- **Big PNG pictures** (a 3000 × 3000 cover, common for podcasts and some albums) show instead of an
+  empty square: they're read a row at a time, without needing 36 MB at once.
+
 ## 4.1.2 (November 24, 2026)
 
 An update for the 4.0 firmware: Settings › System › Software update, the dashboard or the

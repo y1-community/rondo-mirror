@@ -80,8 +80,14 @@ scripting the Y1.
 - `GET /api/library` →
   `{"songs": [{"path", "title", "artist", "album", "track", "disc", "year", "albumArtist", "genre",
     "plays", "lastPlayed", "rating", "durationSec", "size", "modified", "art": true}],
-    "videos": [{"path", "title", "durationSec", "size", "modified"}], "scanning": false,
+    "videos": [{"path", "title", "durationSec", "size", "modified"}],
+    "watching": [{"path", "positionMs", "atText", "leftText", "lastPlayed"}], "scanning": false,
     "folders": ["/storage/sdcard0/Music", …]}`
+  `watching` (4.3.0): the card's videos started on the Y1 and not watched to the end (Continue
+  watching), the last watched first; `atText` and `leftText` in the Y1's language ("23:41",
+  "36 min left").
+- `POST /api/videos/again` `{"path"}` → `{"ok": true}`: the video's place forgotten (Start again),
+  so it opens at its beginning on the Y1.
   `folders`: the storages' top folders (the card's first), where the page puts an upload by its
   kind (Music; Movies or Videos; Pictures).
 - `GET /api/art?path=<file>&size=<px>` → `image/jpeg`, the embedded cover (or a frame for videos),
@@ -327,6 +333,22 @@ With a server, these answer `{"mode": "server"}`: the server's admin page signs 
 - `PUT /api/youtube/cookies` `{"cookies": "<cookies.txt text>"}` (the page sends only its
   youtube.com lines) → the account; `400` when it isn't a cookies.txt with youtube.com cookies.
   `DELETE /api/youtube/cookies` signs out. The file stays on the Y1 (0600) and is never returned.
+
+### Podcasts (YouTube Music's)
+
+- `GET /api/podcasts/state` → `{"inProgress", "upNext", "downloaded", "signedIn"}`: the Y1's own
+  lists of episodes (each `{"id", "title", "show", "showId", "thumb", "date", "status", "lengthMs",
+  "subtitle", "new", "played", "positionMs", "onCard", "later"?, "playing", "progress"?}`).
+- `GET /api/podcasts/library`, `/api/podcasts/list?which=later|new[&next=]`,
+  `/api/podcasts/show?id=MPSP…[&next=]`, `/api/podcasts/search?type=podcast|episode&q=[&next=]`:
+  the source's answers (server-api.md) with every episode as above, a show's `speed`, and its
+  `shows`. Errors: `no_cookies` (503), `old_server` (404: a server before 3.7.0), `expired` (410).
+- `POST /api/podcasts/play` (`from: "start"` for Start again), `/queue` (`next`), `/played`
+  (`played`), `/download` with the episode's `{id, title, show, showId, thumb, lengthMs, progress}`
+  → `{"player", "episode", "state"}`. `DELETE /api/podcasts/download?id=`,
+  `DELETE /api/podcasts/upnext?id=` → the state.
+- `POST /api/podcasts/later` `{id, later}`, `POST /api/podcasts/save` `{id, saved}`: through the source.
+- `PUT /api/podcasts/speed` `{showId, speed}` → `{"speed"}`: the show's speed (percent).
 
 ### YouTube downloads
 Videos saved to `Videos/YouTube` on the card with their subtitles, songs and playlists from YouTube

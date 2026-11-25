@@ -29,6 +29,8 @@ extern "C" {
 #include "app.h"
 #include "file_ops.h"
 #include "fill_in.h"
+#include "podcasts.h"
+#include "rss.h"
 #include "screens.h"
 
 namespace rondo::shell {
@@ -213,6 +215,7 @@ std::string fileTitle(const std::string& title) {
 
 std::string partsBase(const std::string& id) { return downloadDir() + "/." + id; }  // hidden: the scan skips them
 std::string songParts(const std::string& id) { return musicDownloadDir() + "/." + id; }
+std::string rssParts(const std::string& id) { return podcastDownloadDir() + "/." + id; }  // an RSS episode's, hidden too
 
 void readMarks() {
   if (g_markRead) return;
@@ -259,6 +262,7 @@ void clearMarks(const std::string& id) {
 void removeParts(const std::string& id) {
   for (const char* x : {".video", ".video.part", ".audio", ".audio.part", ".mp4.part"}) unlink((partsBase(id) + x).c_str());
   for (const char* x : {".audio", ".audio.part", ".cover", ".cover.part", ".saving.m4a"}) unlink((songParts(id) + x).c_str());
+  for (const char* x : {".audio", ".audio.part"}) unlink((rssParts(id) + x).c_str());
   clearMarks(id);
 }
 
@@ -334,7 +338,7 @@ void saveQueue() {
     if (d.state == DownloadJob::Done || (d.state == DownloadJob::Failed && d.cancelled)) continue;
     // a running one is waiting when read again
     const char* st = d.state == DownloadJob::Running ? "waiting" : stateName(d.state);
-    j += std::string(n++ ? "," : "") + "{\"id\":" + jstr(d.id) + ",\"song\":" + (d.song ? "true" : "false") + ",\"alone\":" + (d.alone ? "true" : "false") +
+    j += std::string(n++ ? "," : "") + "{\"id\":" + jstr(d.id) + ",\"song\":" + (d.song ? "true" : "false") + ",\"episode\":" + (d.episode ? "true" : "false") + ",\"rss\":" + (d.rss ? "true" : "false") + ",\"url\":" + jstr(d.url) + ",\"alone\":" + (d.alone ? "true" : "false") +
          ",\"title\":" + jstr(d.title) + ",\"channel\":" + jstr(d.channel) + ",\"thumb\":" + jstr(d.thumb) + ",\"quality\":" + std::to_string(d.quality) +
          ",\"state\":\"" + st + "\",\"percent\":" + std::to_string(d.percent) + ",\"error\":" + jstr(d.error) + "}";
   }
@@ -352,6 +356,8 @@ void readQueue() {
     DownloadJob j;
     j.id = sval(v, "id"), j.title = sval(v, "title"), j.channel = sval(v, "channel"), j.thumb = sval(v, "thumb"), j.error = sval(v, "error");
     j.song = yyjson_get_bool(yyjson_obj_get(v, "song"));
+    j.episode = yyjson_get_bool(yyjson_obj_get(v, "episode"));
+    j.rss = yyjson_get_bool(yyjson_obj_get(v, "rss")), j.url = sval(v, "url");
     j.alone = yyjson_get_bool(yyjson_obj_get(v, "alone"));
     j.quality = int(yyjson_get_int(yyjson_obj_get(v, "quality")));
     j.percent = int(yyjson_get_int(yyjson_obj_get(v, "percent")));
@@ -567,7 +573,7 @@ void startCover();
 // 8 MB more); without that it waits, its parts kept, looked at again in a minute
 int64_t partsSize(const DownloadJob& j) {
   int64_t n = 0;
-  for (const char* x : {".video", ".audio"}) n += std::max<int64_t>(0, fileSize((j.song ? songParts(j.id) : partsBase(j.id)) + x));
+  for (const char* x : {".video", ".audio"}) n += std::max<int64_t>(0, fileSize((j.rss ? rssParts(j.id) : j.song ? songParts(j.id) : partsBase(j.id)) + x));
   return n;
 }
 bool roomLeft() {  // a save that failed: for lack of room?
@@ -635,10 +641,12 @@ void startCaptions() {
 }
 
 // a part that came whole: the next step
+void saveRss();
 void partDone(Step step) {
   DownloadJob* j = current();
   g_misses = 0;
-  if (j->song) startCover();
+  if (j->rss) saveRss();
+  else if (j->song) startCover();
   else if (step == Picture && g_audioItag) startPart(Sound);
   else startCaptions();
 }
@@ -652,8 +660,9 @@ void startPart(Step step) {
   setStage(j, j->song ? tr("downloads.stage.downloading") : step == Picture ? (g_audioItag ? tr("downloads.stage.video") : tr("downloads.stage.downloading")) : tr("downloads.stage.sound"), true);
   g_changed = true;
   if (g_cardAway) return stopRunning(DownloadJob::Waiting);  // the card is going to the computer
-  std::string file = (j->song ? songParts(j->id) : partsBase(j->id)) + (step == Picture ? ".video" : ".audio");
+  std::string file = (j->rss ? rssParts(j->id) : j->song ? songParts(j->id) : partsBase(j->id)) + (step == Picture ? ".video" : ".audio");
   if (bytes > 0 && fileSize(file) == bytes) return partDone(step);  // it came whole before a restart
+  if (j->rss && fileSize(file) > 0) return partDone(step);  // (a feed's size is often wrong: whole is whole)
   // what of it came before (paused, a restart, a power cut): the part goes on from the bytes the card
   // surely has, if it's of the same file (YouTube gives the same size)
   readMarks();
@@ -676,7 +685,39 @@ void startPart(Step step) {
   g_coreBusy = true;
   g_seq = g_core.state().downloadSeq;
   g_markSeq = g_seq + 1;  // the core's next download is this one
-  g_core.download("/s/" + Api::escape(j->id) + "/" + std::to_string(itag), file, from);
+  g_core.download(j->rss ? j->url : "/s/" + Api::escape(j->id) + "/" + std::to_string(itag), file, from);
+}
+
+// an RSS episode's file, come whole: put in its place as it is (an error page instead of sound: failed)
+void saveRss() {
+  DownloadJob* j = current();
+  std::string part = rssParts(j->id) + ".audio";
+  char head[16] = {0};
+  if (FILE* f = fopen(part.c_str(), "rb")) {
+    if (fread(head, 1, sizeof(head) - 1, f) == 0) head[0] = 0;
+    fclose(f);
+  }
+  std::string h = head;
+  for (char& c : h) c = char(tolower((unsigned char)c));
+  if (h.compare(0, 1, "<") == 0 || h.find("<html") != std::string::npos || h.find("<!doc") != std::string::npos || h.find("<?xml") != std::string::npos) {
+    unlink(part.c_str());
+    return finish(DownloadJob::Failed, tr("downloads.error.noSound"));
+  }
+  std::string file = rssDownloadFile(j->id);
+  if (file.empty()) {
+    std::string show = cardName(j->channel.empty() ? "Podcast" : j->channel), title = cardName(j->title);
+    file = podcastDownloadDir() + "/" + (show.empty() ? "Podcast" : show) + "/" + (title.empty() ? j->id : title) + ".mp3";
+  }
+  mkdirs(file.substr(0, file.rfind('/')));
+  if (rename(part.c_str(), file.c_str()) != 0) return finish(DownloadJob::Failed, tr("downloads.error.notSaved"));
+  clearMarks(j->id);
+  j->file = file, j->percent = 100;
+  std::string title = j->title, id = j->id;
+  bool quiet = j->alone == false;
+  finish(DownloadJob::Done);
+  rssDownloaded(id, file);
+  g_library.scanAsync();
+  if (!quiet) g_app->toast(tr("downloads.downloaded", {{"title", title}}));
 }
 
 // ---- a song (YouTube Music) ----
@@ -710,11 +751,12 @@ void startSaving() {
   std::string words = g_words;
   if (g_joiner.joinable()) g_joiner.join();
   g_joining = true;
-  g_joiner = std::thread([base, id, s, words] {
+  bool episode = j->episode;
+  g_joiner = std::thread([base, id, s, words, episode] {
     std::string out = base + ".saving.m4a";  // an .m4a: writeTags knows a file by its extension
     bool ok = join(base + ".audio", "", out, "", "", id, true) && !g_joinStop;
     std::string lyrics = words;
-    if (ok && lyrics.compare(0, 1, "[") != 0) {  // not timed (YouTube Music's own often aren't): LRCLIB's if it has them
+    if (ok && !episode && lyrics.compare(0, 1, "[") != 0) {  // not timed (YouTube Music's own often aren't): LRCLIB's if it has them
       bool timed = false;
       std::string other = lrclibLyrics(s.artist, s.title, s.album, s.seconds, timed);
       if (timed || lyrics.empty()) lyrics = other.empty() ? lyrics : other;
@@ -725,6 +767,7 @@ void startSaving() {
       if (t.album.empty()) t.album = s.title;  // a single: the album Jellyfin files it under
       t.year = s.year, t.track = s.track, t.trackTotal = s.tracks, t.lyrics = lyrics;
       t.comment = "https://music.youtube.com/watch?v=" + id;
+      if (episode) t.genre = "Podcast";
       if (FILE* f = fopen((base + ".cover").c_str(), "rb")) {
         char b[8192];
         size_t n;
@@ -746,6 +789,7 @@ void startSaving() {
 
 void startWords() {
   DownloadJob* j = current();
+  if (j->episode) return startSaving();  // an episode has no lyrics
   g_step = Words;
   setStage(j, tr("downloads.stage.lyrics"));
   g_changed = true;
@@ -785,6 +829,50 @@ void startCover() {
   // the largest /thumb gives (720 px a side; without w and h, a row's 240)
   std::string cover = g_song.cover + (g_song.cover.find('?') == std::string::npos ? "?" : "&") + "w=720&h=720";
   g_core.download(cover, songParts(j->id) + ".cover");
+}
+
+// an episode: what it was asked with (its show is its artist and album), then its sound
+void startEpisode() {
+  DownloadJob* j = current();
+  uint32_t gen = g_generation;
+  std::string id = j->id;
+  SongInfo s;
+  s.title = j->title, s.artist = j->channel, s.album = j->channel, s.cover = j->thumb;
+  Episode e;
+  if (episodeDownloadInfo(id, e)) {
+    if (!e.title.empty()) s.title = e.title;
+    if (!e.show.empty()) s.artist = s.album = e.show;
+    if (!e.thumb.empty()) s.cover = e.thumb;
+    if (e.lengthMs > 0) s.seconds = int(e.lengthMs / 1000);
+  }
+  g_song = s;
+  g_core.get("/resolve/" + Api::escape(id), 0, [gen](int status, const std::string& body) {
+    if (gen != g_generation) return;
+    DownloadJob* j = current();
+    if (!j) return;
+    if (status == 0) return retryLater();
+    if (status != 200) return finish(DownloadJob::Failed, tr("downloads.error.noSong"));
+    int64_t bytes = -1;
+    if (yyjson_doc* d = yyjson_read(body.data(), body.size(), 0)) {
+      yyjson_val* f = yyjson_obj_get(yyjson_obj_get(yyjson_doc_get_root(d), "formats"), "140");
+      if (f) bytes = int64_t(yyjson_get_num(yyjson_obj_get(f, "contentLength")));
+      if (g_song.seconds <= 0) g_song.seconds = int(yyjson_get_num(yyjson_obj_get(yyjson_doc_get_root(d), "duration")));
+      yyjson_doc_free(d);
+    }
+    if (bytes < 0) return finish(DownloadJob::Failed, tr("downloads.error.noSound"));
+    g_videoItag = 0, g_audioItag = 140, g_videoBytes = 0, g_audioBytes = bytes;
+    startPart(Sound);
+  });
+}
+
+// its file: Podcasts/<Show>/<Title> [<id>].m4a
+std::string episodeFile(const SongInfo& s, const std::string& id) {
+  std::string show = cardName(s.artist.empty() ? "Podcast" : s.artist);
+  if (show.empty()) show = "Podcast";
+  std::string title = cardName(s.title);
+  if (title.size() > 120) title.resize(120);  // a long episode title: the card's names stay short
+  if (title.empty()) title = "Episode";
+  return podcastDownloadDir() + "/" + show + "/" + title + " [" + id + "].m4a";
 }
 
 void startSong() {
@@ -844,7 +932,7 @@ void start(int at) {
   g_at = at;
   DownloadJob* j = current();
   // on the card already (Rondo stopped between saving it and noting the queue): nothing to fetch
-  std::string there = j->song ? downloadedSong(j->id) : downloadedFile(j->id);
+  std::string there = j->rss ? downloadedRss(j->id) : j->episode ? downloadedEpisode(j->id) : j->song ? downloadedSong(j->id) : downloadedFile(j->id);
   if (!there.empty()) {
     j->file = there, j->percent = 100;
     return finish(DownloadJob::Done);
@@ -852,11 +940,20 @@ void start(int at) {
   j->state = DownloadJob::Running, setStage(j, tr("downloads.stage.starting"));
   g_step = Resolving;
   g_changed = g_queueDirty = true;
+  if (j->rss) {  // its file as it is: no streams to find, nothing to join
+    mkdirs(podcastDownloadDir());
+    ++g_generation;
+    int64_t size = 0;
+    if (const RssEpisode* e = rssKept(j->id)) size = e->size;
+    g_videoItag = 0, g_audioItag = 0, g_videoBytes = 0, g_audioBytes = size > 0 ? size : 0;
+    return startPart(Sound);
+  }
   if (j->song) {
-    mkdirs(musicDownloadDir());
+    mkdirs(musicDownloadDir());  // its parts (hidden) are there, an episode's too
+    if (j->episode) mkdirs(podcastDownloadDir());
     g_words.clear();
     ++g_generation;
-    return startSong();
+    return j->episode ? startEpisode() : startSong();
   }
   mkdirs(downloadDir());
   uint32_t gen = ++g_generation;
@@ -1360,6 +1457,7 @@ bool downloadsTick() {
     if (c.downloadSeq != g_seq) {  // the core has begun this part
       int64_t total = g_videoBytes + g_audioBytes;
       int64_t done = (g_step == Sound ? g_videoBytes : 0) + c.downloadDone;
+      if (j->rss && c.downloadTotal > 0) total = c.downloadTotal;  // the host's size, not the feed's
       int pct = total > 0 ? int(std::min<int64_t>(99, done * 100 / total)) : 0;
       if (pct != j->percent) j->percent = pct, g_changed = true;
       if (c.downloadState == 2) {
@@ -1398,6 +1496,21 @@ bool downloadsTick() {
     if (g_joined == 2) g_fullUntil = now_ns() + 60 * kSec, g_app->toast(tr("downloads.cardFullToast"));
     g_step = Idle;  // (stopRunning leaves a save be)
     stopRunning(DownloadJob::Waiting);
+  } else if (g_step == Joining && g_joined != 0 && j->episode) {
+    if (g_joiner.joinable()) g_joiner.join();
+    std::string part = songParts(j->id) + ".saving.m4a", file = episodeFile(g_song, j->id);
+    mkdirs(file.substr(0, file.rfind('/')));
+    if (g_joined == 1 && rename(part.c_str(), file.c_str()) == 0) {
+      removeParts(j->id);
+      j->file = file, j->percent = 100;
+      std::string title = j->title, id = j->id;
+      finish(DownloadJob::Done);
+      episodeDownloaded(id, file);
+      g_library.scanAsync();
+      g_app->toast(tr("downloads.downloaded", {{"title", title}}));
+    } else {
+      finish(DownloadJob::Failed, tr("downloads.error.notSaved"));
+    }
   } else if (g_step == Joining && g_joined != 0 && j->song) {
     if (g_joiner.joinable()) g_joiner.join();
     std::string part = songParts(j->id) + ".saving.m4a", file = songFile(g_song);
@@ -1476,6 +1589,57 @@ bool downloadSong(const Item& item, bool quiet, bool alone) {
   g_jobs.push_back(j);
   g_changed = g_queueDirty = true;
   if (!quiet) g_app->toast(g_at >= 0 ? tr("downloads.waitingToast", {{"title", j.title}}) : tr("downloads.downloadingSong", {{"title", j.title}}));
+  return true;
+}
+
+bool downloadRssJob(const Item& item, const std::string& source, bool quiet) {
+  ensureRead();
+  if (item.id.size() != 16 || source.empty()) return false;
+  if (!downloadedRss(item.id).empty()) {
+    if (!quiet) g_app->toast(tr("downloads.alreadyOnCard"));
+    return false;
+  }
+  for (DownloadJob& j : g_jobs)
+    if (j.id == item.id && going(j)) {
+      if (!quiet) g_app->toast(j.state == DownloadJob::Paused ? tr("downloads.pausedInDownloads") : tr("downloads.alreadyDownloading"));
+      return false;
+    }
+  g_jobs.erase(std::remove_if(g_jobs.begin(), g_jobs.end(), [&](const DownloadJob& j) { return j.id == item.id; }), g_jobs.end());
+  if (g_at >= int(g_jobs.size())) g_at = -1;
+  for (size_t i = 0; i < g_jobs.size(); i++)
+    if (g_jobs[i].state == DownloadJob::Running) g_at = int(i);
+  DownloadJob j;
+  j.id = item.id, j.title = item.title.empty() ? item.id : item.title, j.thumb = item.thumb, j.song = true, j.rss = true, j.url = source;
+  j.channel = item.subtitle;  // its show
+  j.alone = !quiet;
+  g_jobs.push_back(j);
+  g_changed = g_queueDirty = true;
+  if (!quiet) g_app->toast(g_at >= 0 ? tr("downloads.waitingToast", {{"title", j.title}}) : tr("downloads.downloadingEpisode", {{"title", j.title}}));
+  return true;
+}
+
+bool downloadEpisodeJob(const Item& item) {
+  ensureRead();
+  if (item.id.size() != 11) return false;
+  if (!downloadedEpisode(item.id).empty()) {
+    g_app->toast(tr("downloads.alreadyOnCard"));
+    return false;
+  }
+  for (DownloadJob& j : g_jobs)
+    if (j.id == item.id && going(j)) {
+      g_app->toast(j.state == DownloadJob::Paused ? tr("downloads.pausedInDownloads") : tr("downloads.alreadyDownloading"));
+      return false;
+    }
+  g_jobs.erase(std::remove_if(g_jobs.begin(), g_jobs.end(), [&](const DownloadJob& j) { return j.id == item.id; }), g_jobs.end());
+  if (g_at >= int(g_jobs.size())) g_at = -1;
+  for (size_t i = 0; i < g_jobs.size(); i++)
+    if (g_jobs[i].state == DownloadJob::Running) g_at = int(i);
+  DownloadJob j;
+  j.id = item.id, j.title = item.title.empty() ? item.id : item.title, j.thumb = item.thumb, j.song = true, j.episode = true;
+  j.channel = item.subtitle;  // its show
+  g_jobs.push_back(j);
+  g_changed = g_queueDirty = true;
+  g_app->toast(g_at >= 0 ? tr("downloads.waitingToast", {{"title", j.title}}) : tr("downloads.downloadingEpisode", {{"title", j.title}}));
   return true;
 }
 
@@ -1654,7 +1818,7 @@ std::string downloadsJson() {
   std::string s = "{\"dir\":" + jstr(downloadDir()) + ",\"held\":" + jstr(downloadsHeld()) + ",\"jobs\":[";
   int n = 0;
   for (const DownloadJob& j : g_jobs) {
-    s += std::string(n++ ? "," : "") + "{\"id\":" + jstr(j.id) + ",\"kind\":\"" + (j.song ? "song" : "video") + "\",\"title\":" + jstr(j.title) + ",\"channel\":" + jstr(j.channel) +
+    s += std::string(n++ ? "," : "") + "{\"id\":" + jstr(j.id) + ",\"kind\":\"" + (j.rss ? "rss" : j.episode ? "episode" : j.song ? "song" : "video") + "\",\"title\":" + jstr(j.title) + ",\"channel\":" + jstr(j.channel) +
          ",\"quality\":" + std::to_string(j.quality) + ",\"state\":\"" + stateName(j.state) + "\",\"percent\":" + std::to_string(j.percent) +
          ",\"stage\":" + jstr(j.stage) + ",\"fetching\":" + (j.fetching ? "true" : "false") + ",\"error\":" + jstr(j.error) + ",\"file\":" + jstr(j.file) + "}";
   }

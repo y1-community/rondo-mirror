@@ -173,7 +173,7 @@ describe("YouTube Music reducers", () => {
     const list = { type: "MusicShelf", title: { text: "Top songs" }, contents: [{ item_type: "song", id: "khnokW3Mw24", title: "Instant Crush" }] };
     expect(shelfSection(list)!.title).toBe("Top songs");
     expect(shelfSection({ type: "MusicDescriptionShelf", header: { title: { text: "About" } } })).toBeUndefined();
-    const many = { header: { title: { text: "x" } }, contents: Array.from({ length: 30 }, (_, i) => ({ item_type: "song", id: `id${i}`, title: "t" })) };
+    const many = { header: { title: { text: "x" } }, contents: Array.from({ length: 30 }, (_, i) => ({ item_type: "song", id: `song${String(i).padStart(7, "0")}`, title: "t" })) };
     expect(shelfSection(many)!.items).toHaveLength(20);
   });
 
@@ -253,6 +253,24 @@ describe("YouTube feed reducers", () => {
       durationSec: 894,
       thumb: thumbLink("https://i.ytimg.com/vi/x/720.jpg"),
     });
+  });
+
+  it("passes the account's progress (YouTube's red bar) as watched", () => {
+    // as youtubei.js reads a History lockup (Nov 25, 2026): the bar in the picture's bottom overlay
+    const overlays = [
+      { type: "ThumbnailBottomOverlayView", progress_bar: { type: "ThumbnailOverlayProgressBarView", start_percent: 10 }, badges: [] },
+      { type: "AnimatedThumbnailOverlayView" },
+    ];
+    const started = { ...lockup, content_image: { ...lockup.content_image, overlays } };
+    expect(lockupItem(started)!.watched).toBe(10);
+    expect(lockupItem(lockup)!.watched).toBeUndefined();
+    const zero = [{ type: "ThumbnailBottomOverlayView", progress_bar: { start_percent: 0 } }];
+    expect(lockupItem({ ...lockup, content_image: { ...lockup.content_image, overlays: zero } })!.watched).toBeUndefined();
+    // a classic Video node's resume overlay
+    const v = { type: "Video", id: "wfTISOEGVqQ", title: { text: "Chicken" }, duration: { seconds: 900 }, thumbnails: thumbs([336]) };
+    expect(videoItem({ ...v, thumbnail_overlays: [{ type: "ThumbnailOverlayResumePlayback", percent_duration_watched: 42 }] })!.watched).toBe(42);
+    expect(videoItem({ ...v, thumbnail_overlays: [{ type: "ThumbnailOverlayResumePlayback", percent_duration_watched: 140 }] })!.watched).toBe(100);
+    expect(videoItem(v)!.watched).toBeUndefined();
   });
 
   it("adds 'views' to the bare counts of related videos", () => {
