@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "generated_at": "2026-11-24T22:16:43Z",
+  "generated_at": "2026-11-25T15:24:39Z",
   "source_repo": "jarvissax/rondo",
   "source_fallback_repo": "",
   "mirror_repo": "y1-community/rondo-mirror",
@@ -67,6 +67,174 @@
     }
   ],
   "releases": [
+    {
+      "tag": "v4.3.0",
+      "title": "Portable Flashing Package: Rondo 4.3.0",
+      "source_title": "Rondo 4.3.0",
+      "source_url": "https://github.com/jarvissax/rondo/releases/tag/v4.3.0",
+      "source_fallback_url": "",
+      "published_at": "2026-11-25T12:40:17Z",
+      "prerelease": false,
+      "source_notes": "Videos pick up where you left off. An update for the 4.0 firmware: Settings \u203a System \u203a Software\nupdate, the dashboard or the [update page](https://jarvissax.github.io/rondo/). It works with Rondo\nserver 3.1.0 or newer; your phone's progress through a server needs Rondo server 3.8.1.\n\n### New\n\n- **Videos pick up where you left off.** Every video 10 minutes or longer, on the card or on\n  YouTube, opens where you stopped it, a few seconds earlier (\"Resuming at 23:41\"), until you watch\n  it to the end; Shorts and shorter videos start over. A downloaded video shares its place with the\n  same video on YouTube.\n- **Continue watching:** at the top of Library \u203a Videos for the card's videos, and on YouTube's Home\n  for YouTube's (a downloaded one plays from the card), the last one watched first. A started video's\n  row says how much is left, and YouTube's rows show a red bar under the picture, as YouTube's app\n  does. Hold center on a started video, or in the player, for **Start again**.\n- **Your phone's progress too:** signed in to YouTube, a video you half-watched on your phone opens on\n  the Y1 about where you left it, and its red bar shows in YouTube's lists, unless the Y1 has a place\n  of its own for it. The Y1 doesn't tell YouTube what it played. Through a server this needs Rondo\n  server 3.8.1.\n- **The dashboard's Library** sorts videos by **Continue watching**, says where you stopped in a\n  video's details, and has **Start again** there.\n\n### Changed\n\n- **Podcasts have an icon of their own** on the main menu, in YouTube Music's Podcasts tab and on the\n  dashboard, instead of Connections' waves.\n\n### Fixed\n\n- **A list keeps the row you were on** when one comes in above it (Continue watching, on coming back\n  from a video).\n",
+      "assets": [
+        {
+          "name": "rom-windows.zip",
+          "source_asset": "rom.zip",
+          "platform": "windows",
+          "model": "Y1",
+          "type": "Type A",
+          "size": 647410898,
+          "sha256": "ba4711afce3f7efed679c2a20f231f05e176fe323666b542edc3942991e7c77b",
+          "url": "https://github.com/y1-community/rondo-mirror/releases/download/v4.3.0/rom-windows.zip",
+          "fallback_url": "https://github.com/ryan-specter/rondo-mirror/releases/download/v4.3.0/rom-windows.zip"
+        },
+        {
+          "name": "rom-windows-legacy.zip",
+          "source_asset": "rom.zip",
+          "platform": "windows-legacy",
+          "model": "Y1",
+          "type": "Type A",
+          "size": 532503858,
+          "sha256": "43b7a66e4b8852bd0d3330373d62c8ff7284ba71863478d0fd68e929161d3b8c",
+          "url": "https://github.com/y1-community/rondo-mirror/releases/download/v4.3.0/rom-windows-legacy.zip",
+          "fallback_url": "https://github.com/ryan-specter/rondo-mirror/releases/download/v4.3.0/rom-windows-legacy.zip"
+        },
+        {
+          "name": "rom-linux.zip",
+          "source_asset": "rom.zip",
+          "platform": "linux",
+          "model": "Y1",
+          "type": "Type A",
+          "size": 768856416,
+          "sha256": "e76c299d375585be70e26955147a80c887a7530012378866646f8e2507fcc075",
+          "url": "https://github.com/y1-community/rondo-mirror/releases/download/v4.3.0/rom-linux.zip",
+          "fallback_url": "https://github.com/ryan-specter/rondo-mirror/releases/download/v4.3.0/rom-linux.zip"
+        },
+        {
+          "name": "rom-linux-arm64.zip",
+          "source_asset": "rom.zip",
+          "platform": "linux-arm64",
+          "model": "Y1",
+          "type": "Type A",
+          "size": 593759486,
+          "sha256": "9048269e0117ea2c7f1d0ed51371e37306bcfe6614ccd13bf3b6882cd4bfd892",
+          "url": "https://github.com/y1-community/rondo-mirror/releases/download/v4.3.0/rom-linux-arm64.zip",
+          "fallback_url": "https://github.com/ryan-specter/rondo-mirror/releases/download/v4.3.0/rom-linux-arm64.zip"
+        },
+        {
+          "name": "rom-linux-legacy.zip",
+          "source_asset": "rom.zip",
+          "platform": "linux-legacy",
+          "model": "Y1",
+          "type": "Type A",
+          "size": 530918143,
+          "sha256": "84cc0f4f6772de47581cb71bccd74248a02bea2325a37feaaf22ec4a183c97be",
+          "url": "https://github.com/y1-community/rondo-mirror/releases/download/v4.3.0/rom-linux-legacy.zip",
+          "fallback_url": "https://github.com/ryan-specter/rondo-mirror/releases/download/v4.3.0/rom-linux-legacy.zip"
+        },
+        {
+          "name": "rom-macos.zip",
+          "source_asset": "rom.zip",
+          "platform": "macos",
+          "model": "Y1",
+          "type": "Type A",
+          "size": 568724354,
+          "sha256": "62c7a37acb66bde516117ca2c9b3ec3049b88c9e63b80c62407cf80642ec1aa5",
+          "url": "https://github.com/y1-community/rondo-mirror/releases/download/v4.3.0/rom-macos.zip",
+          "fallback_url": "https://github.com/ryan-specter/rondo-mirror/releases/download/v4.3.0/rom-macos.zip"
+        }
+      ],
+      "original_assets": [
+        "rom.zip",
+        "rondo-4.3.0.rondo",
+        "updater.png"
+      ],
+      "stats_url": "https://github.com/y1-community/rondo-mirror/releases/download/v4.3.0/stats.txt"
+    },
+    {
+      "tag": "v4.2.0",
+      "title": "Portable Flashing Package: Rondo 4.2.0",
+      "source_title": "Rondo 4.2.0",
+      "source_url": "https://github.com/jarvissax/rondo/releases/tag/v4.2.0",
+      "source_fallback_url": "",
+      "published_at": "2026-11-25T11:50:04Z",
+      "prerelease": false,
+      "source_notes": "Podcasts: any show with a public feed, on the main menu, and YouTube Music's own. An update for the\n4.0 firmware: Settings \u203a System \u203a Software update, the dashboard or the\n[update page](https://jarvissax.github.io/rondo/). It works with Rondo server 3.1.0 or newer;\nYouTube Music's podcasts through a server need Rondo server 3.7.0, released with it.\n\n### New\n\n**Podcasts on the main menu**, from the shows' own feeds (RSS), as podcast apps get them:\n\n- **Podcasts, from their feeds** (a new **Podcasts** entry on the main menu, after Library; hide it in\n  Settings \u203a Display \u203a Theme \u203a Main menu): **Continue listening**, **New episodes** (what your shows\n  put out since you subscribed, for a month), **Your shows**, **Save for later**, **Top shows**\n  (Apple's charts for your country, by category), **Downloaded** and **Search podcasts** (Apple's\n  directory, and Podcast Index's with a free key). The Y1 reads the feeds and plays the episodes\n  straight from each podcast's host, with or without a Rondo server.\n- **A show's page:** **Subscribe**, its **speed**, **Download new episodes** (on Wi-Fi, the latest 1\n  to 10 kept on the card, played ones deleted if you like; nothing downloads by itself otherwise),\n  **About this show**, and its episodes, newest first (a show told in order: episode 1 first), with a\n  dot on the ones you haven't started and the time left on the ones you have. Thousands of episodes\n  scroll as quickly as a few.\n- **Episodes play as audiobooks do:** their place kept, a little earlier after a pause, chapters\n  (the feed's chapter file or the MP3's own) or 30 s and 15 s skips, bookmarks, the sleep timer,\n  Episodes up next and Back to your music; **speed is kept per show**. A **video episode** opens in\n  the video player where you left it, and **Listen only** plays its sound with the screen off. An\n  episode's options also have **Show notes**.\n- **New episodes are looked for** when Podcasts opens and every 4 hours while the Y1 is on or\n  playing. **Podcast settings** (Podcasts' last row) has **Look for new episodes** and the **Country**\n  for the directory and the charts (the United States unless you choose another).\n- **Downloads** go to `Podcasts/<show>` on the card, as the podcast's own file, beside YouTube\n  Music's episodes.\n- **The dashboard's Podcasts page** has these shows first (YouTube Music's below): search, Top shows,\n  every list, a show's page with Subscribe, speed and Download new episodes, every episode's options,\n  **Add by address** (a private or paid show's feed, read only by the Y1), **Import OPML** and\n  **Export OPML** to move your shows from and to other podcast apps, the country, and without a\n  server a Podcast Index key of the Y1's own.\n\nThey need no server at all. With Rondo server 3.7.0, search finds Podcast Index's shows too (with\nthe key on its admin page), and big feeds come from it a page at a time.\n\n**Podcasts in YouTube Music**, in a tab of their own:\n\n- **Podcasts, from YouTube Music** (YouTube Music \u203a **Podcasts**, a tab beside Home and Library):\n  your saved shows, **Episodes for Later**, **New episodes**, what's downloaded, **Continue\n  listening**, and search for shows and episodes (song search offers matching podcasts too; Home's\n  shelves open shows and play episodes). A show's page has **Save to library**, its **speed** and its\n  episodes newest first, with a dot on the ones you haven't heard and the time left on the ones you've\n  started; hundreds load as you scroll.\n- **Episodes play as audiobooks do:** each remembers where you stopped and starts a little earlier\n  after a pause, Next and Previous move by YouTube's chapters (or skip 30 s and 15 s), with bookmarks,\n  the sleep timer and Back to your music. **Speed is kept per show.** Your music waits.\n- **Episodes up next:** Play next and Add to queue put episodes after the episode or book playing, or\n  after the song playing; each starts where you left it.\n- **Played marks are shared with YouTube Music on your phone**, both ways; an episode started on the\n  phone opens about where you left it there.\n- **Download** an episode to the card (`Podcasts/<show>`) to play it offline, chapters and place\n  included. Episodes stay out of Songs and Shuffle songs.\n- **The dashboard's Podcasts page** (a tab of its own): the same lists, a show's page with its speed,\n  and every episode's options, played on the Y1.\n\nThrough a server, YouTube Music's podcasts need **Rondo server 3.7.0**; directly to YouTube they\nwork as they are. With an older server, YouTube Music \u203a Podcasts says so and still plays what's on\nthe card.\n\n### Changed\n\n- YouTube Music's header shows the logo without the word \"Music\" and the battery alone when it has\n  three tabs (Home, Library, Podcasts), as YouTube's does.\n\n### Fixed\n\n- **A book or an episode started after the card came back from a computer** (the USB drive) jumped\n  to where the music had been at its first pause and play.\n- **Big PNG pictures** (a 3000 \u00d7 3000 cover, common for podcasts and some albums) show instead of an\n  empty square: they're read a row at a time, without needing 36 MB at once.\n",
+      "assets": [
+        {
+          "name": "rom-windows.zip",
+          "source_asset": "rom.zip",
+          "platform": "windows",
+          "model": "Y1",
+          "type": "Type A",
+          "size": 647425304,
+          "sha256": "f4d21f2f2d6e497494dd37a2370102d514a8558e069168e138c5b1dcb8128587",
+          "url": "https://github.com/y1-community/rondo-mirror/releases/download/v4.2.0/rom-windows.zip",
+          "fallback_url": "https://github.com/ryan-specter/rondo-mirror/releases/download/v4.2.0/rom-windows.zip"
+        },
+        {
+          "name": "rom-windows-legacy.zip",
+          "source_asset": "rom.zip",
+          "platform": "windows-legacy",
+          "model": "Y1",
+          "type": "Type A",
+          "size": 532518264,
+          "sha256": "bce9ca30ed79455ae1f3a40acaad81290f3546a6fe13872900e7c7242db349ce",
+          "url": "https://github.com/y1-community/rondo-mirror/releases/download/v4.2.0/rom-windows-legacy.zip",
+          "fallback_url": "https://github.com/ryan-specter/rondo-mirror/releases/download/v4.2.0/rom-windows-legacy.zip"
+        },
+        {
+          "name": "rom-linux.zip",
+          "source_asset": "rom.zip",
+          "platform": "linux",
+          "model": "Y1",
+          "type": "Type A",
+          "size": 768870822,
+          "sha256": "cf6ed115c28af2d0e04d11e99e85d8245d8051855b54df7dc0a82b36e2521aaa",
+          "url": "https://github.com/y1-community/rondo-mirror/releases/download/v4.2.0/rom-linux.zip",
+          "fallback_url": "https://github.com/ryan-specter/rondo-mirror/releases/download/v4.2.0/rom-linux.zip"
+        },
+        {
+          "name": "rom-linux-arm64.zip",
+          "source_asset": "rom.zip",
+          "platform": "linux-arm64",
+          "model": "Y1",
+          "type": "Type A",
+          "size": 593773892,
+          "sha256": "0abee800d5cd55f5fee40c6751208027df4f2fc72775c51773f418c3757782d0",
+          "url": "https://github.com/y1-community/rondo-mirror/releases/download/v4.2.0/rom-linux-arm64.zip",
+          "fallback_url": "https://github.com/ryan-specter/rondo-mirror/releases/download/v4.2.0/rom-linux-arm64.zip"
+        },
+        {
+          "name": "rom-linux-legacy.zip",
+          "source_asset": "rom.zip",
+          "platform": "linux-legacy",
+          "model": "Y1",
+          "type": "Type A",
+          "size": 530932549,
+          "sha256": "c86291689f31410c193e7a15565363df2c55cae4357758846432a549be45d59d",
+          "url": "https://github.com/y1-community/rondo-mirror/releases/download/v4.2.0/rom-linux-legacy.zip",
+          "fallback_url": "https://github.com/ryan-specter/rondo-mirror/releases/download/v4.2.0/rom-linux-legacy.zip"
+        },
+        {
+          "name": "rom-macos.zip",
+          "source_asset": "rom.zip",
+          "platform": "macos",
+          "model": "Y1",
+          "type": "Type A",
+          "size": 568738760,
+          "sha256": "10d9b08ebd0000b6a89108c970e2ba398b00ca9bb9098784e7c8d77079b1ef1d",
+          "url": "https://github.com/y1-community/rondo-mirror/releases/download/v4.2.0/rom-macos.zip",
+          "fallback_url": "https://github.com/ryan-specter/rondo-mirror/releases/download/v4.2.0/rom-macos.zip"
+        }
+      ],
+      "original_assets": [
+        "rom.zip",
+        "rondo-4.2.0.rondo",
+        "updater.png"
+      ],
+      "stats_url": "https://github.com/y1-community/rondo-mirror/releases/download/v4.2.0/stats.txt"
+    },
     {
       "tag": "v4.1.2",
       "title": "Portable Flashing Package: Rondo 4.1.2",
